@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gei-Rechner</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #2c3e50; color: white; text-align: center; margin: 0; padding: 20px; }
+        .app-container { max-width: 400px; margin: auto; background: #34495e; padding: 20px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        #rechnungs-betrag { font-size: 3rem; color: #2ecc71; background: #1a252f; padding: 20px; border-radius: 10px; margin: 20px 0; font-weight: bold; }
+        .schnell-tasten { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        button { padding: 20px; font-size: 1.1rem; border: none; border-radius: 10px; background: #3498db; color: white; cursor: pointer; font-weight: bold; }
+        button:active { background: #2980b9; }
+        .btn-reset { width: 100%; margin-top: 20px; background: #e67e22; }
+        .statistik { margin-top: 20px; border-top: 1px solid #555; padding-top: 10px; font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <h1>🚚 Im Gei unterwegs</h1>
+    <div id="rechnungs-betrag">0.00 €</div>
+    
+    <div class="schnell-tasten">
+        <button onclick="addBetrag(0.50)">Semmel 0,50€</button>
+        <button onclick="addBetrag(1.20)">Brot 1,20€</button>
+        <button onclick="addBetrag(1.50)">Gebäck 1,50€</button>
+        <button onclick="addBetrag(3.80)">Laib 3,80€</button>
+    </div>
+
+    <button onclick="neuerKunde()" class="btn-reset">Verkauf abschließen</button>
+
+    <div class="statistik">
+        Tages-Umsatz: <span id="tagesUmsatz">0.00</span> €
+    </div>
+</div>
+
+<script>
+    let aktuellerBetrag = 0;
+    let tagesGesamt = 0;
+
+    function addBetrag(wert) {
+        aktuellerBetrag += wert;
+        document.getElementById('rechnungs-betrag').innerText = aktuellerBetrag.toFixed(2) + " €";
+    }
+
+    function neuerKunde() {
+        if(aktuellerBetrag > 0) {
+            tagesGesamt += aktuellerBetrag;
+            document.getElementById('tagesUmsatz').innerText = tagesGesamt.toFixed(2);
+            aktuellerBetrag = 0;
+            document.getElementById('rechnungs-betrag').innerText = "0.00 €";
+        }
+    }
+</script>
+
+</body>
+</html>
