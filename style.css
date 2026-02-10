@@ -1,0 +1,229 @@
+/* ==========================================================================
+   1. BASIS & LAYOUT (Anti-Flacker-Wächter)
+   ========================================================================== */
+body { 
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+  background-color: #12171b; 
+  color: white; 
+  margin: 0; 
+  padding: 10px; 
+  display: flex; 
+  justify-content: center; 
+  overflow-x: hidden;
+}
+
+/* WICHTIG: App ist standardmäßig unsichtbar für sauberen Start */
+.app-container {
+  display: none; 
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  width: 95vw;
+  max-width: 500px;
+  margin: 0 auto;
+  background: #1a1f24;
+  padding: 15px;
+  border-radius: 15px;
+  min-height: 90vh;
+  box-sizing: border-box;
+}
+
+/* Alle Ansichten standardmäßig ausblenden */
+.view {
+    display: none;
+}
+
+/* ==========================================================================
+   2. SPEZIAL-ELEMENTE (Splash & Overlay)
+   ========================================================================== */
+#splash-screen {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: #12171b;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease;
+}
+
+.splash-text {
+  text-align: center;
+  color: #2ecc71;
+  font-weight: bold;
+  font-size: 2rem;
+}
+
+#overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+
+#overlay-box {
+  background: #242a2f;
+  padding: 20px;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+/* ==========================================================================
+   3. HEADER & NAVIGATION
+   ========================================================================== */
+.header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 20px; 
+  background: #1a252f; 
+  padding: 12px; 
+  border-radius: 15px; 
+}
+
+#live-time { font-size: 1.2rem; font-weight: bold; color: #2ecc71; }
+#live-date { font-size: 0.7rem; color: #888; }
+#display-fahrer { font-weight: bold; color: #f1c40f; background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 10px; font-size: 0.9rem; }
+
+.header-tools { display: flex; gap: 8px; }
+.icon-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; opacity: 0.3; transition: 0.3s; color: white; }
+.icon-btn.active { opacity: 1; text-shadow: 0 0 15px #2ecc71; transform: scale(1.2); }
+
+/* ==========================================================================
+   4. KASSEN-DISPLAYS (Betrag, Ticker & Bericht)
+   ========================================================================== */
+#rechnungs-betrag { 
+  font-size: 3.5rem; margin-bottom: 15px; color: #32ff7e; background: #000; 
+  padding: 20px; border-radius: 15px; text-align: right; 
+  box-shadow: inset 0 5px 15px rgba(0,0,0,0.8); font-family: monospace; 
+}
+
+#ticker-container {
+  margin-top: 15px;
+  width: 100%;
+  border: 1px solid #34495e !important;
+  background-color: rgba(0, 0, 0, 0.4) !important;
+  border-radius: 12px;
+  padding: 10px;
+  box-sizing: border-box;
+  max-height: 135px !important;
+  overflow-y: auto !important;
+}
+
+#ticker-liste li {
+    white-space: nowrap;
+    overflow-x: hidden;
+    font-family: monospace;
+    border-bottom: 1px solid #2c3e50;
+    padding: 5px 0;
+    font-size: 0.85rem;
+}
+
+#umsatz-anzeige {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    padding: 10px;
+    background-color: #1a1f24;
+    border-top: 1px solid #34495e;
+    font-size: 0.85rem;
+    color: #888;
+}
+
+#umsatz-anzeige span { color: #ecf0f1; }
+#display-gesamt { color: #2ecc71 !important; font-weight: bold; }
+
+/* Berichtsvorschau Seite 2 */
+#bericht-vorschau-container {
+    background: #000;
+    border: 2px solid #34495e;
+    border-radius: 12px;
+    padding: 15px;
+    height: 300px;
+    overflow-y: auto;
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+}
+
+#bericht-live-text {
+    color: #2ecc71;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin: 0;
+    white-space: pre;
+}
+
+/* ==========================================================================
+   5. BUTTON-SYSTEM (Global & Grids)
+   ========================================================================== */
+button {
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.05s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+button:active { transform: translateY(4px); box-shadow: none !important; }
+
+/* GRID: Produkte (4 Spalten) & Overlay */
+.schnell-tasten, #overlay-content {
+  display: grid !important;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.schnell-tasten { grid-template-columns: repeat(4, 1fr) !important; }
+#overlay-content { grid-template-columns: repeat(2, 1fr) !important; margin-top: 10px; }
+
+.schnell-tasten button, #overlay-content button {
+  width: 100% !important;
+  height: 60px !important;
+  font-size: 0.9rem !important;
+  flex-direction: column; 
+  background: linear-gradient(#3498db, #2980b9); 
+  box-shadow: 0 5px 0 #1c5982;
+}
+
+.action-area {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.action-area button { height: 50px !important; font-size: 0.85rem !important; }
+
+.optionen-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px;
+}
+
+.view:not(#main-view) button { width: 100%; height: 50px; margin-top: 10px; }
+
+/* ==========================================================================
+   6. FARBSCHEMA & STYLES
+   ========================================================================== */
+#btn-passend, .btn-save { background: linear-gradient(#2ecc71, #27ae60); box-shadow: 0 5px 0 #1e8449; }
+#btn-auf50, #btn-aufEuro { background: linear-gradient(#9b59b6, #8e44ad); box-shadow: 0 5px 0 #6c3483; }
+#btn-clear, .btn-danger { background: linear-gradient(#ff7675, #d63031); box-shadow: 0 5px 0 #8e2021; }
+.btn-gold { background: linear-gradient(#f1c40f, #d4ac0d); color: #2c3e50; box-shadow: 0 5px 0 #9e810a; }
+.btn-gray, .btn-back, .btn-mutter { background: linear-gradient(#34495e, #2c3e50); box-shadow: 0 5px 0 #1a252f; }
+.btn-mutter { font-size: 0.7rem; margin-top: 40px; opacity: 0.6; height: 35px !important; }
+
+.view-title { color: #f1c40f; font-size: 1.1rem; margin-top: 20px; border-bottom: 1px solid #34495e; padding-bottom: 5px; }
+input#input-fahrer { width: 100%; background: #000; border: 1px solid #34495e; color: #f1c40f; padding: 12px; border-radius: 10px; font-size: 1.1rem; text-align: center; }

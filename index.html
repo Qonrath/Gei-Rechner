@@ -1,58 +1,84 @@
 <!DOCTYPE html>
-<html>
-<head>
+<html lang="en">
+
+  <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gei-Rechner</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #2c3e50; color: white; text-align: center; margin: 0; padding: 20px; }
-        .app-container { max-width: 400px; margin: auto; background: #34495e; padding: 20px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
-        #rechnungs-betrag { font-size: 3rem; color: #2ecc71; background: #1a252f; padding: 20px; border-radius: 10px; margin: 20px 0; font-weight: bold; }
-        .schnell-tasten { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        button { padding: 20px; font-size: 1.1rem; border: none; border-radius: 10px; background: #3498db; color: white; cursor: pointer; font-weight: bold; }
-        button:active { background: #2980b9; }
-        .btn-reset { width: 100%; margin-top: 20px; background: #e67e22; }
-        .statistik { margin-top: 20px; border-top: 1px solid #555; padding-top: 10px; font-size: 1.2rem; }
-    </style>
-</head>
-<body>
+    <title>Gei-Rechner dev</title>
+    <link rel="stylesheet" href="./style.css">
 
-<div class="app-container">
-    <h1>🚚 Im Gei unterwegs</h1>
-    <div id="rechnungs-betrag">0.00 €</div>
+  </head>
     
-    <div class="schnell-tasten">
-        <button onclick="addBetrag(0.50)">Semmel 0,50€</button>
-        <button onclick="addBetrag(1.20)">Brot 1,20€</button>
-        <button onclick="addBetrag(1.50)">Gebäck 1,50€</button>
-        <button onclick="addBetrag(3.80)">Laib 3,80€</button>
-    </div>
-
-    <button onclick="neuerKunde()" class="btn-reset">Verkauf abschließen</button>
-
-    <div class="statistik">
-        Tages-Umsatz: <span id="tagesUmsatz">0.00</span> €
-    </div>
+  <body>
+  <div id="splash-screen">
+  <div class="splash-text">
+    <span class="word" style="animation-delay: 0s;">GEI</span>
+    <span class="word" style="animation-delay: 0.2s;">GEI</span><br>
+    <span class="word" style="animation-delay: 0.4s;">WIR</span>
+    <span class="word" style="animation-delay: 0.6s;">FAHRN</span>
+    <span class="word" style="animation-delay: 1s;">INS</span>
+    <span class="word" style="animation-delay: 1.2s;">GEI</span>
+  </div>
 </div>
 
-<script>
-    let aktuellerBetrag = 0;
-    let tagesGesamt = 0;
+<div id="overlay" onclick="closeOverlay()">
+  <div id="overlay-box" onclick="event.stopPropagation()">
+    <h2 id="overlay-titel">Auswahl</h2>
+    <div id="overlay-content"></div> 
+    <button onclick="closeOverlay()" class="btn-back" style="margin-top:20px;">Abbrechen</button>
+  </div>
+</div>
 
-    function addBetrag(wert) {
-        aktuellerBetrag += wert;
-        document.getElementById('rechnungs-betrag').innerText = aktuellerBetrag.toFixed(2) + " €";
-    }
+<div class="app-container">
+  <div class="header">
+    <div class="header-info">
+      <div id="live-date">00.00.0000</div>
+      <div id="live-time">00:00:00</div>
+    </div>
+    <div id="display-fahrer">LÄDT...</div>
+    <div class="header-tools">
+      <button class="icon-btn" onclick="navigation('main-view')">🛒</button>
+      <button class="icon-btn" onclick="navigation('stats-view')">Σ</button>
+      <button class="icon-btn" onclick="navigation('settings-view')">⚙️</button>
+    </div>
+  </div>
+  
+  <div id="main-view" class="view">
+    <div id="rechnungs-betrag">0.00 €</div>
+    <div class="schnell-tasten" id="produkt-container"></div>
+    <div class="action-area">
+      <button id="btn-passend" onclick="verbuchen(0)">Σ: 0.00</button>
+      <button id="btn-auf50">½→</button>
+      <button id="btn-aufEuro">€→</button>
+      <button id="btn-clear" onclick="resetAktuellerKunde()">C</button>
+    </div>
+    <div id="ticker-container"><ul id="ticker-liste"></ul></div>
+    <div id="umsatz-anzeige">
+      Ware: <span id="display-ware">0.00</span>€ | Tip: <span id="display-trinkgeld">0.00</span>€ | Σ: <span id="display-gesamt">0.00</span>€
+    </div>
+  </div>
 
-    function neuerKunde() {
-        if(aktuellerBetrag > 0) {
-            tagesGesamt += aktuellerBetrag;
-            document.getElementById('tagesUmsatz').innerText = tagesGesamt.toFixed(2);
-            aktuellerBetrag = 0;
-            document.getElementById('rechnungs-betrag').innerText = "0.00 €";
-        }
-    }
-</script>
+  <div id="stats-view" class="view">
+    <h2 class="view-title">Tagesbericht Vorschau</h2>
+    <div id="bericht-vorschau-container"><pre id="bericht-live-text"></pre></div>
+    <div class="optionen-grid" style="margin-top: 15px;">
+      <button class="btn-gold" onclick="kopiereTagesbericht()">📋 Kopieren</button>
+      <button class="btn-danger" onclick="neuerTagStarten()">📅 Tag Reset</button>
+    </div>
+  </div>
 
-</body>
+  <div id="settings-view" class="view">
+    <h2 class="view-title">Fahrer</h2>
+    <div class="fahrer-settings">
+      <input type="text" id="input-fahrer" placeholder="Name..." oninput="markAsDirty()">
+    </div>
+    <h2 class="view-title">Produkte & Preise</h2>
+    <div id="preis-editor"></div>
+    <button onclick="produkteSpeichern()" class="btn-save">💾 Speichern</button>
+    <button onclick="totalerReset()" class="btn-mutter">⚠️ WERKSEINSTELLUNG</button>
+  </div>
+</div>
+    <script  src="./script.js"></script>
+
+  </body>
+  
 </html>
