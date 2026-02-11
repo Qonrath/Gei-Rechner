@@ -1,6 +1,16 @@
 /* ==========================================================================
    1. BASIS & LAYOUT (Anti-Flacker-Wächter)
    ========================================================================== */
+
+
+/*Mit border-box sagst du dem Browser: "Egal was kommt, das ganze Ding darf inklusive Rahmen und Polsterung niemals breiter als 100% sein."
+Pro-Tipp für die Stabilität: Oft setzt man ganz oben im CSS folgenden "Reset", damit man dieses Problem bei keinem Element (Buttons, Container, Inputs) jemals wieder hat:*/
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+
 body { 
   font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
   background-color: #12171b; 
@@ -72,6 +82,22 @@ body {
   width: 90%;
   max-width: 400px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+/* Markiert das Element, das gerade gezogen wird */
+.sortable-ghost {
+    opacity: 0.4;
+    background: #3498db !important;
+}
+
+/* Zeigt an, dass die Zeile greifbar ist */
+.drag-handle {
+    cursor: grab;
+    user-select: none;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
 }
 
 /* ==========================================================================
@@ -226,4 +252,20 @@ button:active { transform: translateY(4px); box-shadow: none !important; }
 .btn-mutter { font-size: 0.7rem; margin-top: 40px; opacity: 0.6; height: 35px !important; }
 
 .view-title { color: #f1c40f; font-size: 1.1rem; margin-top: 20px; border-bottom: 1px solid #34495e; padding-bottom: 5px; }
-input#input-fahrer { width: 100%; background: #000; border: 1px solid #34495e; color: #f1c40f; padding: 12px; border-radius: 10px; font-size: 1.1rem; text-align: center; }
+
+input#input-fahrer {
+    width: 100%;
+    box-sizing: border-box; /* Zieht Padding vom 100% Platz ab, statt es draufzurechnen */
+    background: #000;
+    border: 1px solid #34495e;
+    color: #f1c40f;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    text-align: center;
+}
+
+/* Verhindert, dass der Cursor so aussieht, als könnte man dort droppen */
+.sub-sortable.sortable-choose .category-group {
+    display: none !important;
+}
