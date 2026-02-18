@@ -1,118 +1,62 @@
 /* ==========================================================================
-   1. BASIS & LAYOUT (Anti-Flacker-Wächter)
+   1. BASIS & LAYOUT (Anti-Flacker-Wächter & Reset)
    ========================================================================== */
+*, *::before, *::after { box-sizing: border-box; }
 
-
-/*Mit border-box sagst du dem Browser: "Egal was kommt, das ganze Ding darf inklusive Rahmen und Polsterung niemals breiter als 100% sein."
-Pro-Tipp für die Stabilität: Oft setzt man ganz oben im CSS folgenden "Reset", damit man dieses Problem bei keinem Element (Buttons, Container, Inputs) jemals wieder hat:*/
-
-*, *::before, *::after {
-    box-sizing: border-box;
+body {
+  margin: 0; padding: 0;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: #12171b; color: white;
+  display: flex; justify-content: center;
+  overflow-x: hidden; min-height: 100vh;
 }
 
-
-body { 
-  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-  background-color: #12171b; 
-  color: white; 
-  margin: 0; 
-  padding: 10px; 
-  display: flex; 
-  justify-content: center; 
-  overflow-x: hidden;
-}
-
-/* WICHTIG: App ist standardmäßig unsichtbar für sauberen Start */
 .app-container {
-  display: none; 
-  opacity: 0;
-  transition: opacity 0.5s ease;
-  width: 95vw;
-  max-width: 500px;
-  margin: 0 auto;
-  background: #1a1f24;
-  padding: 15px;
-  border-radius: 15px;
-  min-height: 90vh;
-  box-sizing: border-box;
+    display: none; opacity: 0;
+    transition: opacity 0.5s ease;
+    width: 100%; max-width: 660px; margin: 0 auto;
+    background: #1a1f24; padding: 15px; min-height: 100vh;
+    flex-direction: column; 
 }
 
-/* Alle Ansichten standardmäßig ausblenden */
-.view {
-    display: none;
-}
+.view { display: none; }
+
+/* Browser-Pfeile entfernen */
+input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 
 /* ==========================================================================
-   2. SPEZIAL-ELEMENTE (Splash & Overlay)
+   2. SPEZIAL-ELEMENTE (Splash & Overlay & Sortable)
    ========================================================================== */
 #splash-screen {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: #12171b;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-  transition: opacity 0.5s ease;
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: #12171b; display: flex; justify-content: center; align-items: center;
+  z-index: 9999; transition: opacity 0.5s ease;
 }
 
-.splash-text {
-  text-align: center;
-  color: #2ecc71;
-  font-weight: bold;
-  font-size: 2rem;
-}
+.splash-text { text-align: center; color: #2ecc71; font-weight: bold; font-size: 2rem; }
 
 #overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.85);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 10000;
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 10000;
 }
 
 #overlay-box {
-  background: #242a2f;
-  padding: 20px;
-  border-radius: 20px;
-  width: 90%;
-  max-width: 400px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  background: #242a2f; padding: 20px; border-radius: 20px;
+  width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
-/* Markiert das Element, das gerade gezogen wird */
-.sortable-ghost {
-    opacity: 0.4;
-    background: #3498db !important;
-}
-
-/* Zeigt an, dass die Zeile greifbar ist */
-.drag-handle {
-    cursor: grab;
-    user-select: none;
-}
-
-.drag-handle:active {
-    cursor: grabbing;
-}
+.sortable-ghost { opacity: 0.4; background: #3498db !important; }
+.drag-handle { cursor: grab; user-select: none; padding: 10px; color: #555; }
+.drag-handle:active { cursor: grabbing; }
 
 /* ==========================================================================
    3. HEADER & NAVIGATION
    ========================================================================== */
 .header { 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center; 
-  margin-bottom: 20px; 
-  background: #1a252f; 
-  padding: 12px; 
-  border-radius: 15px; 
+  display: flex; justify-content: space-between; align-items: center; 
+  margin-bottom: 20px; background: #1a252f; padding: 12px; border-radius: 15px; 
 }
-
 #live-time { font-size: 1.2rem; font-weight: bold; color: #2ecc71; }
 #live-date { font-size: 0.7rem; color: #888; }
 #display-fahrer { font-weight: bold; color: #f1c40f; background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 10px; font-size: 0.9rem; }
@@ -122,7 +66,7 @@ body {
 .icon-btn.active { opacity: 1; text-shadow: 0 0 15px #2ecc71; transform: scale(1.2); }
 
 /* ==========================================================================
-   4. KASSEN-DISPLAYS (Betrag, Ticker & Bericht)
+   4. KASSEN-DISPLAYS (Betrag & Ticker)
    ========================================================================== */
 #rechnungs-betrag { 
   font-size: 3.5rem; margin-bottom: 15px; color: #32ff7e; background: #000; 
@@ -131,141 +75,109 @@ body {
 }
 
 #ticker-container {
-  margin-top: 15px;
-  width: 100%;
-  border: 1px solid #34495e !important;
-  background-color: rgba(0, 0, 0, 0.4) !important;
-  border-radius: 12px;
-  padding: 10px;
-  box-sizing: border-box;
-  max-height: 135px !important;
-  overflow-y: auto !important;
+  margin-top: 15px; width: 100%; border: 1px solid #34495e; background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 12px; padding: 10px; max-height: 135px; overflow-y: auto;
 }
 
 #ticker-liste li {
-    white-space: nowrap;
-    overflow-x: hidden;
-    font-family: monospace;
-    border-bottom: 1px solid #2c3e50;
-    padding: 5px 0;
-    font-size: 0.85rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: monospace;
+  border-bottom: 1px solid #2c3e50; padding: 5px 0; font-size: 0.85rem;
 }
 
 #umsatz-anzeige {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    padding: 10px;
-    background-color: #1a1f24;
-    border-top: 1px solid #34495e;
-    font-size: 0.85rem;
-    color: #888;
+  display: flex; justify-content: center; gap: 15px; padding: 10px;
+  background-color: #1a1f24; border-top: 1px solid #34495e; font-size: 0.85rem; color: #888;
 }
 
-#umsatz-anzeige span { color: #ecf0f1; }
-#display-gesamt { color: #2ecc71 !important; font-weight: bold; }
-
-/* Berichtsvorschau Seite 2 */
-#bericht-vorschau-container {
-    background: #000;
-    border: 2px solid #34495e;
-    border-radius: 12px;
-    padding: 15px;
-    height: 300px;
-    overflow-y: auto;
-    box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
-}
-
-#bericht-live-text {
-    color: #2ecc71;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 0.85rem;
-    line-height: 1.4;
-    margin: 0;
-    white-space: pre;
-}
+#display-gesamt { color: #2ecc71; font-weight: bold; }
 
 /* ==========================================================================
-   5. BUTTON-SYSTEM (Global & Grids)
+   5. BUTTON-SYSTEM (Zentral gesteuert)
    ========================================================================== */
 button {
-  border: none;
-  border-radius: 12px;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  transition: transform 0.05s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  box-sizing: border-box;
+  width: 100%; height: 60px; border: none; border-radius: 12px;
+  color: white; font-weight: bold; font-size: 0.85rem; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  transition: transform 0.05s ease; box-shadow: 0 5px 0 rgba(0,0,0,0.3); position: relative;
 }
 
-button:active { transform: translateY(4px); box-shadow: none !important; }
+button:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,0.3); }
 
-/* GRID: Produkte (4 Spalten) & Overlay */
-.schnell-tasten, #overlay-content {
-  display: grid !important;
-  gap: 8px;
-  width: 100%;
-  margin-bottom: 20px;
+/* GRIDS */
+.schnell-tasten, .action-area { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; }
+.optionen-grid, .settings-controls, .backup-grid, #overlay-content {
+  display: grid !important; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;
 }
 
-.schnell-tasten { grid-template-columns: repeat(4, 1fr) !important; }
-#overlay-content { grid-template-columns: repeat(2, 1fr) !important; margin-top: 10px; }
-
-.schnell-tasten button, #overlay-content button {
-  width: 100% !important;
-  height: 60px !important;
-  font-size: 0.9rem !important;
-  flex-direction: column; 
-  background: linear-gradient(#3498db, #2980b9); 
-  box-shadow: 0 5px 0 #1c5982;
-}
-
-.action-area {
-  display: grid !important;
-  grid-template-columns: repeat(4, 1fr) !important;
-  gap: 8px;
-  margin-bottom: 15px;
-}
-
-.action-area button { height: 50px !important; font-size: 0.85rem !important; }
-
-.optionen-grid {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
-  gap: 10px;
-}
-
-.view:not(#main-view) button { width: 100%; height: 50px; margin-top: 10px; }
+/* Spezifische Button-Inhalte (Name über Preis) */
+.btn-price-tag { font-size: 0.7rem; opacity: 0.8; margin-top: 2px; }
 
 /* ==========================================================================
-   6. FARBSCHEMA & STYLES
+   6. EDITOR (Einstellungen & Produkte)
    ========================================================================== */
+.category-group {
+    background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 12px;
+    margin-bottom: 12px; border: 1px solid #34495e;
+}
+
+.sub-sortable {
+    margin-top: 8px; padding-left: 20px; border-left: 2px solid #34495e; min-height: 20px;
+}
+
+.produkt-row {
+    display: flex; gap: 8px; align-items: center; padding: 4px 8px; margin-bottom: 4px;
+    background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.editor-input-name { flex-grow: 1; background: #000; color: white; border: 1px solid #34495e; padding: 8px; border-radius: 5px; }
+.editor-input-price { width: 70px; background: #000; color: white; border: 1px solid #34495e; padding: 8px; border-radius: 5px; text-align: right; }
+.btn-delete-item { width: 35px; height: 35px; background: rgba(214, 48, 49, 0.2); border: 1px solid #d63031; color: #ff7675; border-radius: 5px; }
+
+/* ==========================================================================
+   7. FARBSCHEMA & ANIMATIONEN
+   ========================================================================== */
+.schnell-tasten button, .btn-blue, #overlay-content button { background: linear-gradient(#3498db, #2980b9); box-shadow: 0 5px 0 #1c5982; }
 #btn-passend, .btn-save { background: linear-gradient(#2ecc71, #27ae60); box-shadow: 0 5px 0 #1e8449; }
 #btn-auf50, #btn-aufEuro { background: linear-gradient(#9b59b6, #8e44ad); box-shadow: 0 5px 0 #6c3483; }
 #btn-clear, .btn-danger { background: linear-gradient(#ff7675, #d63031); box-shadow: 0 5px 0 #8e2021; }
 .btn-gold { background: linear-gradient(#f1c40f, #d4ac0d); color: #2c3e50; box-shadow: 0 5px 0 #9e810a; }
-.btn-gray, .btn-back, .btn-mutter { background: linear-gradient(#34495e, #2c3e50); box-shadow: 0 5px 0 #1a252f; }
-.btn-mutter { font-size: 0.7rem; margin-top: 40px; opacity: 0.6; height: 35px !important; }
+.btn-gray, .btn-back { background: linear-gradient(#34495e, #2c3e50); box-shadow: 0 5px 0 #1a252f; }
 
-.view-title { color: #f1c40f; font-size: 1.1rem; margin-top: 20px; border-bottom: 1px solid #34495e; padding-bottom: 5px; }
+.save-success { outline: 2px solid #2ecc71 !important; background-color: rgba(46, 204, 113, 0.2) !important; transition: all 0.3s ease; }
+input.save-success { box-shadow: 0 0 15px rgba(46, 204, 113, 0.5); }
 
-input#input-fahrer {
-    width: 100%;
-    box-sizing: border-box; /* Zieht Padding vom 100% Platz ab, statt es draufzurechnen */
-    background: #000;
-    border: 1px solid #34495e;
-    color: #f1c40f;
-    padding: 12px;
-    border-radius: 10px;
-    font-size: 1.1rem;
-    text-align: center;
+
+/* ==========================================================================
+   BERICHT-VORSCHAU (MATRIX / RETRO-LOOK)
+   ========================================================================= */
+
+#bericht-vorschau-container {
+    background: #000;              /* Pechschwarz */
+    border: 2px solid #34495e;     /* Dunkler Rahmen */
+    border-radius: 12px;
+    padding: 15px;
+    height: 350px;                 /* Feste Höhe für Scrollbarkeit */
+    overflow-y: auto;
+    box-shadow: inset 0 0 20px rgba(46, 204, 113, 0.2); /* Sanfter grüner Glow innen */
 }
 
-/* Verhindert, dass der Cursor so aussieht, als könnte man dort droppen */
-.sub-sortable.sortable-choose .category-group {
-    display: none !important;
+#bericht-live-text {
+    color: #2ecc71;                /* Klassisches Matrix-Grün */
+    font-family: 'Courier New', Courier, monospace; /* Schreibmaschinen-Schrift */
+    font-size: 0.85rem;
+    white-space: pre;              /* Ganz wichtig: Erhält Leerzeichen & Umbrüche */
+    line-height: 1.4;
+    text-shadow: 0 0 5px rgba(46, 204, 113, 0.5); /* Leucht-Effekt der Zeichen */
+}
+
+/* Custom Scrollbar für den Retro-Look */
+#bericht-vorschau-container::-webkit-scrollbar {
+    width: 8px;
+}
+#bericht-vorschau-container::-webkit-scrollbar-track {
+    background: #000;
+}
+#bericht-vorschau-container::-webkit-scrollbar-thumb {
+    background: #2c3e50;
+    border-radius: 10px;
 }

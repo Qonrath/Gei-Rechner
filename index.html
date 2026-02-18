@@ -3,7 +3,7 @@
 
   <head>
     <meta charset="UTF-8">
-    <title>Gei-Rechner dev2</title>
+    <title>Gei-Rechner  dev</title>
     <link rel="stylesheet" href="./style.css">
 
   </head>
@@ -25,12 +25,13 @@
 <div id="overlay" onclick="closeOverlay()">
   <div id="overlay-box" onclick="event.stopPropagation()">
     <h2 id="overlay-titel">Auswahl</h2>
-    <div id="overlay-content"></div> 
+    <div id="overlay-content"></div>
     <button onclick="closeOverlay()" class="btn-back" style="margin-top:20px;">Abbrechen</button>
   </div>
 </div>
 
 <div class="app-container">
+  
   <div class="header">
     <div class="header-info">
       <div id="live-date">00.00.0000</div>
@@ -43,25 +44,34 @@
       <button class="icon-btn" onclick="navigation('settings-view')">⚙️</button>
     </div>
   </div>
-  
+
   <div id="main-view" class="view">
     <div id="rechnungs-betrag">0.00 €</div>
     <div class="schnell-tasten" id="produkt-container"></div>
+    
     <div class="action-area">
       <button id="btn-passend" onclick="verbuchen(0)">Σ: 0.00</button>
       <button id="btn-auf50">½→</button>
       <button id="btn-aufEuro">€→</button>
       <button id="btn-clear" onclick="resetAktuellerKunde()">C</button>
     </div>
-    <div id="ticker-container"><ul id="ticker-liste"></ul></div>
+
+    <div id="ticker-container">
+      <ul id="ticker-liste"></ul>
+    </div>
+
     <div id="umsatz-anzeige">
-      Ware: <span id="display-ware">0.00</span>€ | Tip: <span id="display-trinkgeld">0.00</span>€ | Σ: <span id="display-gesamt">0.00</span>€
+      Ware: <span id="display-ware">0.00</span>€ | 
+      Tip: <span id="display-trinkgeld">0.00</span>€ | 
+      Σ: <span id="display-gesamt">0.00</span>€
     </div>
   </div>
 
   <div id="stats-view" class="view">
     <h2 class="view-title">Tagesbericht Vorschau</h2>
-    <div id="bericht-vorschau-container"><pre id="bericht-live-text"></pre></div>
+    <div id="bericht-vorschau-container">
+      <pre id="bericht-live-text"></pre>
+    </div>
     <div class="optionen-grid" style="margin-top: 15px;">
       <button class="btn-gold" onclick="kopiereTagesbericht()">📋 Kopieren</button>
       <button class="btn-danger" onclick="neuerTagStarten()">📅 Tag Reset</button>
@@ -71,37 +81,32 @@
   <div id="settings-view" class="view">
     <h2 class="view-title">Fahrer</h2>
     <div class="fahrer-settings">
-        <input type="text" id="input-fahrer" placeholder="Name..." oninput="markAsDirty()">
+      <input type="text" id="input-fahrer" placeholder="Name...">
     </div>
 
     <h2 class="view-title">Produkte & Preise</h2>
     <div id="preis-editor"></div>
     
-    <div class="settings-controls" style="display: flex; gap: 10px; margin-top: 20px; border-bottom: 1px solid #34495e; padding-bottom: 15px;">
-        <button onclick="neuesProduktHinzufuegen()" class="btn-gold" style="flex: 1;">+ Produkt</button>
-        <button onclick="neueGruppeHinzufuegen()" class="btn-gold" style="flex: 1; background: linear-gradient(#f39c12, #e67e22);">+ Gruppe</button>
+    <div class="settings-controls" style="display: flex; gap: 10px; margin-top: 20px; padding-bottom: 5px;">
+      <button onclick="neuesProduktHinzufuegen()" class="btn-gold" style="flex: 1;">+ Produkt</button>
+      <button onclick="neueGruppeHinzufuegen()" class="btn-gold" style="flex: 1; background: linear-gradient(#f39c12, #e67e22);">+ Gruppe</button>
     </div>
 
-    <button onclick="produkteSpeichern()" class="btn-save" style="width: 100%; margin-top: 20px; margin-bottom: 20px;">
-        💾 Änderungen Speichern
-    </button>
-
     <div class="backup-section" style="margin-top: 10px; padding-top: 20px; border-top: 2px solid #34495e;">
-        <h3 style="color: #f1c40f; font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 15px; text-align: center;">
-            DATENSICHERUNG & TRANSFER
-        </h3>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <button onclick="exportNachZwischenablage()" class="btn-gold" style="font-size: 0.75rem;">📋 Kopieren</button>
-            <button onclick="importAusZwischenablage()" class="btn-gold" style="font-size: 0.75rem;">📥 Einfügen</button>
-            
-            <button onclick="exportAlsDatei()" class="btn-save" style="font-size: 0.75rem; background: #2980b9;">💾 Datei Sichern</button>
-            <button onclick="importAusDatei()" class="btn-save" style="font-size: 0.75rem; background: #3498db;">📂 Datei Laden</button>
-        </div>
-        
-<button onclick="totalerReset(event)" class="btn-danger" style="width: 100%; margin-top: 20px; font-size: 0.7rem;">
-    ⚠️ WERKSEINSTELLUNG (RESET)
-</button>
+      <h3 style="color: #f1c40f; font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 15px; text-align: center;">
+        DATENSICHERUNG & TRANSFER
+      </h3>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <button onclick="exportNachZwischenablage()" class="btn-gold" style="font-size: 0.75rem;">📋 Kopieren</button>
+        <button onclick="importAusZwischenablage()" class="btn-gold" style="font-size: 0.75rem;">📥 Einfügen</button>
+        <button onclick="exportAlsDatei()" class="btn-save" style="font-size: 0.75rem; background: #2980b9;">💾 Datei Sichern</button>
+        <button onclick="importAusDatei()" class="btn-save" style="font-size: 0.75rem; background: #3498db;">📂 Datei Laden</button>
+      </div>
+      
+      <button onclick="totalerReset(event)" class="btn-danger" style="width: 100%; margin-top: 20px; font-size: 0.7rem;">
+        ⚠️ WERKSEINSTELLUNG (RESET)
+      </button>
     </div>
   </div>
 </div>

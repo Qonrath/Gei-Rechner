@@ -8,7 +8,6 @@ let umsatzWare = parseFloat(localStorage.getItem('umsatzWare')) || 0;
 let trinkgeldGesamt = parseFloat(localStorage.getItem('trinkgeldGesamt')) || 0;
 let tagesStatistikProdukte = JSON.parse(localStorage.getItem('gei_strichliste')) || {};
 let berichtErstellt = false;
-let einstellungenGeaendert = false;
 let zwischenliste = []; // Hält die aktuellen Produkte fest
 
 /* ==========================================================================
@@ -36,7 +35,7 @@ let produkte = JSON.parse(localStorage.getItem('gei_produkte')) || JSON.parse(JS
    2. START-UP LOGIK
    ========================================================================== */
 window.onload = function() {
-    // 1. Produkte sicher laden
+    // 1. Daten-Wiederherstellung
     const saved = localStorage.getItem('gei_produkte');
     if (saved && saved !== "undefined" && saved !== "null") {
         try {
@@ -46,39 +45,47 @@ window.onload = function() {
         }
     }
 
-    // 2. Fahrer laden
     const savedFahrer = localStorage.getItem('gei_fahrer');
     if (savedFahrer) fahrerName = savedFahrer;
 
+    // 2. UI-Elemente initialisieren (Werte setzen)
     const headerAnzeige = document.getElementById('display-fahrer');
     if (headerAnzeige) headerAnzeige.innerText = fahrerName.toUpperCase();
 
-    // 3. UI & Uhr Initialisieren
-    setupProduktButtons();
-    updateUmsatzAnzeige();
-    updateClock();
-    setInterval(updateClock, 1000);
-    
     const tickerContainer = document.getElementById('ticker-liste');
     if (tickerContainer) {
         tickerContainer.innerHTML = localStorage.getItem('gei_ticker_html') || "";
     }
 
+    // 3. Funktionen starten
+    setupProduktButtons();
+    updateUmsatzAnzeige();
+    updateClock();
+    setInterval(updateClock, 1000);
+    
+    // 4. Start-Ansicht festlegen
     navigation('main-view');
 
-    // Splash-Screen Handling
+    // 5. Splash-Screen & App-Übergang (Der sanfte Start)
     setTimeout(() => {
         const splash = document.getElementById('splash-screen');
         const app = document.querySelector('.app-container');
+
+        // Splash ausfaden
         if (splash) splash.style.opacity = '0';
-        setTimeout(() => { 
-            if(splash) splash.style.display = 'none';
-            if(app) { 
-                app.style.display = 'block'; 
-                setTimeout(() => app.style.opacity = '1', 50); 
+
+        setTimeout(() => {
+            if (splash) splash.style.display = 'none';
+            if (app) {
+                // WICHTIG: Hier nutzen wir jetzt flex für dein Grid
+                app.style.display = 'flex'; 
+                // Kurze Verzögerung für die Opacity-Transition
+                setTimeout(() => {
+                    app.style.opacity = '1';
+                }, 50);
             }
-        }, 500);
-    }, 800);
+        }, 500); // Zeit für das Ausfaden des Splash
+    }, 800); // Wartezeit Logo-Präsentation
 };
 
 /* ==========================================================================
@@ -238,44 +245,46 @@ function updateUmsatzAnzeige() {
 /* ==========================================================================
    4. UI & NAVIGATION
    ========================================================================== */
+/* ==========================================================================
+   4. UI & NAVIGATION (KASSEN-LOGIK)
+   ========================================================================== */
 function setupProduktButtons() {
     const container = document.getElementById('produkt-container');
     if (!container) return;
     container.innerHTML = "";
     
-    // Nur sichtbare Produkte verarbeiten
-    const sichtbareProdukte = produkte.filter(p => p.sichtbar !== false);
-
-    sichtbareProdukte.forEach(p => {
+    // Nur sichtbare Produkte auf der Hauptebene verarbeiten
+    produkte.filter(p => p.sichtbar !== false).forEach(p => {
         const b = document.createElement('button');
         
         if (p.unterauswahl && Array.isArray(p.unterauswahl)) {
-            // FALL A: Es ist eine Gruppe
-            b.innerText = `${p.name} ▾`;
+            // FALL A: Gruppe (Öffnet Overlay)
+            b.innerHTML = `<span>${p.name}</span><span class="btn-price-tag">Gruppe ▾</span>`;
             b.onclick = () => openOverlay(p.name, p.unterauswahl);
         } else {
-            // FALL B: Es ist ein Einzelprodukt
-            // Sicherheit: Falls Preis fehlt, nimm 0
-            const preisSicher = typeof p.preis === 'number' ? p.preis : 0;
-            b.innerText = `${p.name}\n${preisSicher.toFixed(2)}€`;
-            b.onclick = () => addBetrag(preisSicher, p.name);
+            // FALL B: Einzelprodukt
+            const preis = typeof p.preis === 'number' ? p.preis : 0;
+            b.innerHTML = `<span>${p.name}</span><span class="btn-price-tag">${preis.toFixed(2)}€</span>`;
+            b.onclick = () => addBetrag(preis, p.name);
         }
-        
         container.appendChild(b);
     });
 }
 
-
 function openOverlay(titel, liste) {
     const contentEl = document.getElementById('overlay-content');
-    document.getElementById('overlay-titel').innerText = titel;
+    const titelEl = document.getElementById('overlay-titel');
+    if (titelEl) titelEl.innerText = titel;
     contentEl.innerHTML = "";
 
-    const sichtbareListe = liste.filter(item => item.sichtbar !== false);
-    sichtbareListe.forEach(item => {
+    liste.filter(item => item.sichtbar !== false).forEach(item => {
         let btn = document.createElement('button');
-        btn.innerHTML = `${item.name}<br><small>${item.preis.toFixed(2)}€</small>`;
-        btn.onclick = () => { addBetrag(item.preis, item.name); closeOverlay(); };
+        const preis = typeof item.preis === 'number' ? item.preis : 0;
+        btn.innerHTML = `<span>${item.name}</span><span class="btn-price-tag">${preis.toFixed(2)}€</span>`;
+        btn.onclick = () => { 
+            addBetrag(preis, item.name); 
+            closeOverlay(); 
+        };
         contentEl.appendChild(btn);
     });
     document.getElementById('overlay').style.display = "flex";
@@ -291,10 +300,7 @@ function navigation(zielId) {
         return; 
     }
 
-    if (einstellungenGeaendert && !confirm("Änderungen verwerfen?")) return;
-    einstellungenGeaendert = false;
-
-    document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+        document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
 
     const zielView = document.getElementById(zielId);
 
@@ -320,15 +326,29 @@ function navigation(zielId) {
         if (vorschau) vorschau.innerText = generiereBerichtText();
 
     } else if (zielId === 'settings-view') {
-
-        icons[2]?.classList.add('active');
-
+       icons[2]?.classList.add('active');
         const inputFahrer = document.getElementById('input-fahrer');
-
-        if (inputFahrer) inputFahrer.value = fahrerName;
-
+        
+        if (inputFahrer) {
+            inputFahrer.value = fahrerName;
+            
+            // NEU: Auto-Save für den Fahrernamen
+            inputFahrer.onblur = function() {
+                fahrerName = this.value.trim() || "CHEF";
+                localStorage.setItem('gei_fahrer', fahrerName);
+                
+                // Anzeige oben im Header sofort aktualisieren
+                const headerAnzeige = document.getElementById('display-fahrer');
+                if (headerAnzeige) headerAnzeige.innerText = fahrerName.toUpperCase();
+                
+                // Optional: Die grüne Bestätigung zeigen
+                if (typeof showSaveAnimation === "function") {
+                    showSaveAnimation(this);
+                }
+            };
+        }
+        
         fillSettingsForm(); 
-
     }
 
 }
@@ -336,100 +356,81 @@ function navigation(zielId) {
 /* ==========================================================================
    5. SETTINGS & EDITOR (MODULAR)
    ========================================================================== */
-function erzeugeProduktZeile(item, id, isSub = false) {
+function erzeugeProduktZeile(item, index, subIndex = null) {
     const row = document.createElement('div');
     row.className = "produkt-row";
-    row.dataset.id = id;
-    
-    // Styling der Zeile
-    row.style.display = "flex";
-    row.style.gap = "5px";
-    row.style.marginBottom = "8px";
-    row.style.alignItems = "center";
-    row.style.background = isSub ? "rgba(255,255,255,0.03)" : "transparent";
-    row.style.padding = isSub ? "5px" : "0";
-    row.style.borderRadius = "8px";
 
     // 1. Drag-Handle
     const handle = document.createElement('div');
     handle.className = "drag-handle";
     handle.innerHTML = "☰";
-    handle.style.cursor = "grab";
-    handle.style.padding = "10px";
-    handle.style.color = "#555";
-    handle.style.fontSize = "1.2rem";
 
     // 2. Sichtbarkeit Checkbox
     const cb = document.createElement('input');
     cb.type = "checkbox";
     cb.checked = item.sichtbar !== false;
-    cb.id = `p-sichtbar-${id}`;
-    cb.onchange = () => {
-        item.sichtbar = cb.checked;
-        markAsDirty();
-    };
+    cb.onchange = () => produkteSpeichernSilently(cb);
 
     // 3. Name Input
     const nameInp = document.createElement('input');
     nameInp.type = "text";
+    nameInp.className = "editor-input-name";
     nameInp.value = item.name;
-    nameInp.id = `p-name-${id}`;
-    nameInp.style.width = "50%";
-    nameInp.style.background = "#000";
-    nameInp.style.color = "white";
-    nameInp.style.border = "1px solid #34495e";
-    nameInp.style.padding = "8px";
-    nameInp.style.borderRadius = "5px";
-    nameInp.oninput = markAsDirty;
+    nameInp.onblur = () => produkteSpeichernSilently(nameInp);
 
     // 4. Preis Input
     const priceInp = document.createElement('input');
     priceInp.type = "number";
+    priceInp.className = "editor-input-price";
+    priceInp.inputMode = "decimal";
     priceInp.step = "0.01";
     priceInp.value = item.preis ? item.preis.toFixed(2) : "0.00";
-    priceInp.id = `p-preis-${id}`;
-    priceInp.style.width = "25%";
-    priceInp.style.background = "#000";
-    priceInp.style.color = "white";
-    priceInp.style.border = "1px solid #34495e";
-    priceInp.style.padding = "8px";
-    priceInp.style.borderRadius = "5px";
-    priceInp.oninput = markAsDirty;
 
-    // 5. Lösch-Button mit sauberer Logik
-    const delBtn = document.createElement('button');
-    delBtn.innerHTML = "🗑️";
-    delBtn.style.width = "35px";
-    delBtn.style.height = "35px";
-    delBtn.style.background = "rgba(214, 48, 49, 0.2)";
-    delBtn.style.border = "1px solid #d63031";
-    delBtn.style.color = "#ff7675";
-    delBtn.style.borderRadius = "5px";
-    delBtn.style.cursor = "pointer";
-
-    delBtn.onclick = () => {
-        const parts = id.toString().split('-');
-        
-        if (parts.length > 1) {
-            // Es ist ein Unterprodukt (z.B. "3-1")
-            const hauptIndex = parseInt(parts[0], 10);
-            const unterIndex = parseInt(parts[1], 10);
-            produktLoeschen(hauptIndex, unterIndex);
-        } else {
-            // Es ist ein Hauptprodukt (z.B. "3")
-            const hauptIndex = parseInt(id, 10);
-            produktLoeschen(hauptIndex);
-        }
+    // Schutz vor Scrollen/Pfeiltasten bei Zahlenfeldern
+    priceInp.onwheel = (e) => e.preventDefault();
+    priceInp.onkeydown = (e) => {
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') e.preventDefault();
     };
 
-    // Zusammenbauen
-    row.appendChild(handle);
-    row.appendChild(cb);
-    row.appendChild(nameInp);
-    row.appendChild(priceInp);
-    row.appendChild(delBtn);
+    priceInp.onblur = function() {
+        let wert = parseFloat(this.value) || 0;
+        let abgeschnitten = Math.floor((wert + 0.00001) * 100) / 100;
+        this.value = abgeschnitten.toFixed(2);
+        produkteSpeichernSilently(this);
+    };
+
+    // 5. Lösch-Button
+    const delBtn = document.createElement('button');
+    delBtn.innerHTML = "🗑️";
+    delBtn.className = "btn-delete-item";
+    delBtn.onclick = () => produktLoeschen(index, subIndex);
+
+    // Zusammenfügen
+    row.append(handle, cb, nameInp, priceInp, delBtn);
 
     return row;
+}
+
+/**
+ * Hilfsfunktion: Speichert alles im Hintergrund, 
+ * ohne das nervige "Gespeichert!"-Alert-Fenster.
+ */
+function produkteSpeichernSilently(element) {
+    // 1. Daten aus dem UI auslesen
+    produkte = leseAktuelleSortierung();
+    
+    // 2. Im LocalStorage zementieren
+    localStorage.setItem('gei_produkte', JSON.stringify(produkte));
+    
+    // 3. Die Kassen-Buttons im Hintergrund aktualisieren
+    setupProduktButtons();
+    
+    // 4. Animation auslösen, wenn ein Element übergeben wurde
+    if (element && typeof showSaveAnimation === "function") {
+        showSaveAnimation(element);
+    }
+    
+    console.log("Auto-Save für Produkt-Feld durchgeführt.");
 }
 
 function fillSettingsForm() {
@@ -439,74 +440,102 @@ function fillSettingsForm() {
 
     produkte.forEach((p, i) => {
         if (!p.unterauswahl) {
+            // FALL 1: Einzelprodukt auf Hauptebene
             container.appendChild(erzeugeProduktZeile(p, i));
         } else {
+            // FALL 2: Gruppe
             const catBox = document.createElement('div');
             catBox.className = "category-group";
-            catBox.style = "background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; margin-bottom: 15px; border: 1px dashed #555;";
 
             const catHeader = document.createElement('div');
-            catHeader.style = "display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;";
+            catHeader.style = "display: flex; align-items: center; gap: 10px; margin-bottom: 10px;";
             catHeader.innerHTML = `
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div class="drag-handle" style="color:#f1c40f; cursor:grab;">☰</div>
-                    <input type="text" class="cat-title-input" value="${p.name}" 
-                           style="background:rgba(0,0,0,0.3); border:1px solid #444; color:#f1c40f; font-weight:bold; width:180px; padding:5px; border-radius:4px;"
-                           oninput="markAsDirty()">
-                </div>
-                <button onclick="produktLoeschen(${i})" style="width:35px; height:35px; background:rgba(192, 57, 43, 0.2); color:#e74c3c; border:1px solid #c0392b; border-radius:5px;">🗑️</button>`;
+                <div class="drag-handle" style="color:#f1c40f;">☰</div>
+                <input type="text" class="cat-title-input editor-input-name" value="${p.name}" 
+                       onblur="produkteSpeichernSilently(this)">
+                <button class="btn-delete-item" onclick="produktLoeschen(${i})">🗑️</button>`;
 
             const subContainer = document.createElement('div');
             subContainer.className = "sub-sortable";
-            subContainer.style = "min-height: 40px; padding: 5px; border: 1px solid rgba(255,255,255,0.1); border-radius: 5px; background: rgba(0,0,0,0.1);";
 
+            // Unterprodukte der Gruppe rendern
             p.unterauswahl.forEach((u, j) => {
-                subContainer.appendChild(erzeugeProduktZeile(u, `${i}-${j}`, true));
+                subContainer.appendChild(erzeugeProduktZeile(u, i, j));
             });
 
             catBox.append(catHeader, subContainer);
             container.appendChild(catBox);
 
+            // Sortable für diesen speziellen Untercontainer
             new Sortable(subContainer, {
-                group: { name: 'shared', put: (to, from, dragEl) => !dragEl.classList.contains('category-group') },
-                animation: 150, handle: '.drag-handle', ghostClass: 'sortable-ghost', onEnd: markAsDirty
+                group: 'shared-items',
+                animation: 150,
+                handle: '.drag-handle',
+                ghostClass: 'sortable-ghost',
+                onEnd: () => produkteSpeichernSilently()
             });
         }
     });
 
+    // Haupt-Sortable für die gesamte Liste (Produkte & Gruppen)
     new Sortable(container, {
-        group: { name: 'shared', put: true },
-        animation: 150, handle: '.drag-handle', ghostClass: 'sortable-ghost', onEnd: markAsDirty
+        group: 'shared-items',
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'sortable-ghost',
+        onEnd: () => produkteSpeichernSilently()
     });
 }
 
 function leseAktuelleSortierung() {
     const neuerStand = [];
     const editor = document.getElementById('preis-editor');
-    if(!editor) return produkte;
+    if (!editor) return produkte;
 
-    editor.childNodes.forEach(node => {
-        if (node.classList && node.classList.contains('category-group')) {
-            const catName = node.querySelector('.cat-title-input').value;
+    // Wir gehen durch jedes Kind-Element des Editors
+    Array.from(editor.children).forEach(node => {
+        
+        // FALL A: Es ist eine Gruppe (Container)
+        if (node.classList.contains('category-group')) {
+            const catNameInput = node.querySelector('.cat-title-input');
             const subContainer = node.querySelector('.sub-sortable');
             const unterliste = [];
-            subContainer.childNodes.forEach(subNode => {
-                if (subNode.classList.contains('produkt-row')) unterliste.push(extrahiereDatenAusZeile(subNode));
+
+            if (subContainer) {
+                Array.from(subContainer.children).forEach(subNode => {
+                    if (subNode.classList.contains('produkt-row')) {
+                        unterliste.push(extrahiereDatenDirektAusZeile(subNode));
+                    }
+                });
+            }
+            
+            neuerStand.push({ 
+                name: catNameInput ? catNameInput.value : "Gruppe", 
+                sichtbar: true, 
+                unterauswahl: unterliste 
             });
-            neuerStand.push({ name: catName, sichtbar: true, unterauswahl: unterliste });
-        } else if (node.classList && node.classList.contains('produkt-row')) {
-            neuerStand.push(extrahiereDatenAusZeile(node));
+
+        // FALL B: Es ist ein Einzelprodukt auf der Hauptebene
+        } else if (node.classList.contains('produkt-row')) {
+            neuerStand.push(extrahiereDatenDirektAusZeile(node));
         }
     });
     return neuerStand;
 }
 
-function extrahiereDatenAusZeile(row) {
-    const id = row.dataset.id;
+/**
+ * NEU & SICHER: Diese Funktion sucht die Inputs RELATIV zur Zeile.
+ * So ist es völlig egal, welche ID oder welchen Index das Produkt vorher hatte.
+ */
+function extrahiereDatenDirektAusZeile(row) {
+    const nameInp = row.querySelector('.editor-input-name');
+    const priceInp = row.querySelector('.editor-input-price');
+    const checkInp = row.querySelector('input[type="checkbox"]');
+
     return {
-        name: document.getElementById(`p-name-${id}`).value,
-        preis: parseFloat(document.getElementById(`p-preis-${id}`).value) || 0,
-        sichtbar: document.getElementById(`p-sichtbar-${id}`).checked
+        name: nameInp ? nameInp.value : "Unbekannt",
+        preis: priceInp ? parseFloat(priceInp.value) || 0 : 0,
+        sichtbar: checkInp ? checkInp.checked : true
     };
 }
 
@@ -569,50 +598,51 @@ function neuerTagStarten() {
     }
 }
 
-function produkteSpeichern() {
-    const inputFahrer = document.getElementById('input-fahrer');
-    if (inputFahrer) {
-        fahrerName = inputFahrer.value.trim() || "CHEF";
-        localStorage.setItem('gei_fahrer', fahrerName);
-    }
-    produkte = leseAktuelleSortierung();
-    localStorage.setItem('gei_produkte', JSON.stringify(produkte));
-    einstellungenGeaendert = false;
-    fillSettingsForm();
-    setupProduktButtons();
-    alert("Gespeichert!");
-}
 
 function neuesProduktHinzufuegen() {
+    // Fügt das neue Produkt oben ein
     produkte.unshift({ name: "NEUES PRODUKT", preis: 0.00, sichtbar: true });
-    fillSettingsForm(); markAsDirty();
+    
+    // UI neu zeichnen
+    fillSettingsForm(); 
+    
+    // Sofort im Hintergrund speichern
+    produkteSpeichernSilently();
 }
 
 function neueGruppeHinzufuegen() {
+    // Fügt die neue Gruppe oben ein
     produkte.unshift({ name: "NEUE GRUPPE", sichtbar: true, unterauswahl: [] });
-    fillSettingsForm(); markAsDirty();
+    
+    // UI neu zeichnen
+    fillSettingsForm(); 
+    
+    // Sofort im Hintergrund speichern
+    produkteSpeichernSilently();
 }
 
 function produktLoeschen(index, subIndex = null) {
-    if (!confirm("Dieses Produkt wirklich löschen?")) return;
+    const istGruppe = subIndex === null && produkte[index].unterauswahl;
+    const name = subIndex === null ? produkte[index].name : produkte[index].unterauswahl[subIndex].name;
+    
+    // Kurze Sicherheitsabfrage
+    if (!confirm(`Möchtest du "${name}" wirklich löschen?`)) return;
 
     if (subIndex === null) {
-        // Fall 1: Ein Hauptprodukt löschen
+        // Löscht Hauptprodukt ODER die komplette Gruppe
         produkte.splice(index, 1);
     } else {
-        // Fall 2: Ein Unterprodukt aus einer Gruppe löschen
-        // Wir prüfen vorher, ob die Gruppe überhaupt existiert
+        // Löscht nur das Unterprodukt
         if (produkte[index] && produkte[index].unterauswahl) {
             produkte[index].unterauswahl.splice(subIndex, 1);
         }
     }
 
-    // UI aktualisieren
+    // UI aktualisieren & Speichern
     fillSettingsForm(); 
-    markAsDirty();
+    produkteSpeichernSilently();
 }
 
-function markAsDirty() { einstellungenGeaendert = true; }
 
 /* ==========================================================================
    6. STATISTIK & BACKUP
@@ -621,21 +651,27 @@ function generiereBerichtText() {
     const datum = new Date().toLocaleDateString('de-DE');
     let b = `TAGESBERICHT: ${datum}\n`;
     b += `FAHRER: ${fahrerName.toUpperCase()}\n`;
-    b += `------------------------------------------\n`;
-    b += `ARTIKEL         | ANZ | PREIS  | SUMME\n`;
-    b += `------------------------------------------\n`;
+    // Verlängerte Trennlinie für 20 Zeichen Namen + Spalten
+    b += `--------------------------------------------------\n`;
+    b += `${"ARTIKEL".padEnd(20)} | ANZ | PREIS   | SUMME\n`;
+    b += `--------------------------------------------------\n`;
     
     for (const [name, anz] of Object.entries(tagesStatistikProdukte)) {
         let p = getP(name);
         let summe = p * anz;
-        b += `${name.padEnd(15)} | ${anz.toString().padStart(3)} | ${p.toFixed(2).padStart(6)}€ | ${summe.toFixed(2).padStart(7)}€\n`;
+        
+        // Name auf 20 Zeichen begrenzen (substring) und mit Leerzeichen auffüllen
+        let formatName = name.substring(0, 20).padEnd(20);
+        
+        b += `${formatName} | ${anz.toString().padStart(3)} | ${p.toFixed(2).padStart(6)}€ | ${summe.toFixed(2).padStart(7)}€\n`;
     }
     
-    b += `------------------------------------------\n`;
-    b += `WARE GESAMT:    ${umsatzWare.toFixed(2).padStart(10)} €\n`;
-    b += `TRINKGELD:      ${trinkgeldGesamt.toFixed(2).padStart(10)} €\n`;
-    b += `NETTO LOSUNG:   ${(umsatzWare + trinkgeldGesamt).toFixed(2).padStart(10)} €\n`;
+    b += `--------------------------------------------------\n`;
+    b += `WARE GESAMT:    ${umsatzWare.toFixed(2).padStart(23)} €\n`;
+    b += `TRINKGELD:      ${trinkgeldGesamt.toFixed(2).padStart(23)} €\n`;
+    b += `NETTO LOSUNG:   ${(umsatzWare + trinkgeldGesamt).toFixed(2).padStart(23)} €\n`;
     b += `KÄUFE: #${transaktionsNummer}`;
+    
     return b;
 }
 
@@ -825,4 +861,11 @@ function totalerReset(ev) {
         alert("Werkseinstellungen geladen!");
         navigation('main-view');
     }
+}
+
+function showSaveAnimation(element) {
+    element.classList.add('save-success');
+    setTimeout(() => {
+        element.classList.remove('save-success');
+    }, 600); // Leuchtet für 0,6 Sekunden auf
 }
