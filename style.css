@@ -1,6 +1,13 @@
 /* ==========================================================================
    1. BASIS & LAYOUT (Anti-Flacker-Wächter & Reset)
    ========================================================================== */
+
+/* 1. Konstanten ganz oben definieren */
+:root {
+    --app-max-width: 660px;
+    --main-bg: #1a1f24;
+}
+
 *, *::before, *::after { box-sizing: border-box; }
 
 body {
@@ -19,7 +26,13 @@ body {
     flex-direction: column; 
 }
 
-.view { display: none; }
+.view {
+    display: none; 
+    width: 100%;       /* Nimm alles, was da ist... */
+    max-width: 660px;  /* ...aber nicht mehr als 660px */
+    margin: 0 auto;    /* Zentriere die View, falls der Bildschirm breiter ist */
+    animation: fadeIn 0.3s ease;
+}
 
 /* Browser-Pfeile entfernen */
 input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -180,4 +193,9 @@ input.save-success { box-shadow: 0 0 15px rgba(46, 204, 113, 0.5); }
 #bericht-vorschau-container::-webkit-scrollbar-thumb {
     background: #2c3e50;
     border-radius: 10px;
+}
+
+.screenshot-container img {
+    filter: grayscale(20%) contrast(1.1); /* Optional: Sieht etwas edler aus */
+    border-radius: 4px;
 }

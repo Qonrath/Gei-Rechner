@@ -15,8 +15,9 @@
   <div class="splash-text">
     <span class="word" style="animation-delay: 0s;">GEI</span>
     <span class="word" style="animation-delay: 0.2s;">GEI</span><br>
-    <span class="word" style="animation-delay: 0.4s;">WIR</span>
-    <span class="word" style="animation-delay: 0.6s;">FAHRN</span>
+    <span class="word" style="animation-delay: 0.4s;">GEIL</span><br>
+    <span class="word" style="animation-delay: 0.6s;">WIR</span>
+    <span class="word" style="animation-delay: 0.8s;">FAHRN</span>
     <span class="word" style="animation-delay: 1s;">INS</span>
     <span class="word" style="animation-delay: 1.2s;">GEI</span>
   </div>
@@ -42,6 +43,7 @@
       <button class="icon-btn" onclick="navigation('main-view')">🛒</button>
       <button class="icon-btn" onclick="navigation('stats-view')">Σ</button>
       <button class="icon-btn" onclick="navigation('settings-view')">⚙️</button>
+      <button class="icon-btn" onclick="navigation('info-view')">ⓘ</button>
     </div>
   </div>
 
@@ -109,7 +111,35 @@
       </button>
     </div>
   </div>
+
+
+<div id="info-view" class="view" style="display:none;">
+    <div class="card">
+        <h2>Widmung</h2>
+        <div style="text-align: center; margin: 20px 0;">
+            <p style="font-style: italic; color: #f1c40f;">Für Hauni, Ihr Kommentar:</p>
+                       
+            <div class="screenshot-container" style="
+            display: inline-block; 
+            margin: 20px auto; 
+            border: 2px solid #34495e; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            line-height: 0;">
+    
+    <img src="https://raw.githubusercontent.com/Qonrath/Gei-Rechner/main/Haunz.jpg" 
+         alt="WhatsApp Reaktion" 
+         style="max-width: 100%; height: auto; display: block;">
 </div>
+            
+            <p style="margin-top: 20px; font-size: 0.8rem; color: #888;">
+                Version 1.0 (Februar 2026)
+            </p>
+        </div>
+        <button class="btn-gray" onclick="navigation('main-view')" style="width: 100%;">Zurück zur Kasse</button>
+    </div>
+</div>
+  </div>
     <script  src="./script.js"></script>
 
   </body>
