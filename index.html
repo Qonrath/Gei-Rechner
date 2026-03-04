@@ -3,7 +3,7 @@
 
   <head>
     <meta charset="UTF-8">
-    <title>Gei-Rechner  dev</title>
+    <title>Gei-Rechner  1.13 Zeiterfassung Fertig</title>
     <link rel="stylesheet" href="./style.css">
 
   </head>
@@ -27,12 +27,11 @@
   <div id="overlay-box" onclick="event.stopPropagation()">
     <h2 id="overlay-titel">Auswahl</h2>
     <div id="overlay-content"></div>
-    <button onclick="closeOverlay()" class="btn-back" style="margin-top:20px;">Abbrechen</button>
   </div>
 </div>
 
 <div class="app-container">
-  
+
   <div class="header">
     <div class="header-info">
       <div id="live-date">00.00.0000</div>
@@ -42,6 +41,7 @@
     <div class="header-tools">
       <button class="icon-btn" onclick="navigation('main-view')">🛒</button>
       <button class="icon-btn" onclick="navigation('stats-view')">Σ</button>
+      <button class="icon-btn" onclick="navigation('time-view')">⏱️</button>
       <button class="icon-btn" onclick="navigation('settings-view')">⚙️</button>
       <button class="icon-btn" onclick="navigation('info-view')">ⓘ</button>
     </div>
@@ -50,7 +50,7 @@
   <div id="main-view" class="view">
     <div id="rechnungs-betrag">0.00 €</div>
     <div class="schnell-tasten" id="produkt-container"></div>
-    
+
     <div class="action-area">
       <button id="btn-passend" onclick="verbuchen(0)">Σ: 0.00</button>
       <button id="btn-auf50">½→</button>
@@ -75,7 +75,7 @@
       <pre id="bericht-live-text"></pre>
     </div>
     <div class="optionen-grid" style="margin-top: 15px;">
-      <button class="btn-gold" onclick="kopiereTagesbericht()">📋 Kopieren</button>
+      <button class="btn-gold" onclick="kopiereTagesbericht()">📋 Kopieren </button>
       <button class="btn-danger" onclick="neuerTagStarten()">📅 Tag Reset</button>
     </div>
   </div>
@@ -88,7 +88,7 @@
 
     <h2 class="view-title">Produkte & Preise</h2>
     <div id="preis-editor"></div>
-    
+
     <div class="settings-controls" style="display: flex; gap: 10px; margin-top: 20px; padding-bottom: 5px;">
       <button onclick="neuesProduktHinzufuegen()" class="btn-gold" style="flex: 1;">+ Produkt</button>
       <button onclick="neueGruppeHinzufuegen()" class="btn-gold" style="flex: 1; background: linear-gradient(#f39c12, #e67e22);">+ Gruppe</button>
@@ -98,48 +98,70 @@
       <h3 style="color: #f1c40f; font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 15px; text-align: center;">
         DATENSICHERUNG & TRANSFER
       </h3>
-      
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
         <button onclick="exportNachZwischenablage()" class="btn-gold" style="font-size: 0.75rem;">📋 Kopieren</button>
         <button onclick="importAusZwischenablage()" class="btn-gold" style="font-size: 0.75rem;">📥 Einfügen</button>
         <button onclick="exportAlsDatei()" class="btn-save" style="font-size: 0.75rem; background: #2980b9;">💾 Datei Sichern</button>
         <button onclick="importAusDatei()" class="btn-save" style="font-size: 0.75rem; background: #3498db;">📂 Datei Laden</button>
       </div>
-      
       <button onclick="totalerReset(event)" class="btn-danger" style="width: 100%; margin-top: 20px; font-size: 0.7rem;">
-        ⚠️ WERKSEINSTELLUNG (RESET)
+        ⚠️ WERKSEINSTELLUNG (RESET) 
       </button>
     </div>
   </div>
 
-
-<div id="info-view" class="view" style="display:none;">
+  <div id="info-view" class="view" style="display:none;">
     <div class="card">
-        <h2>Widmung</h2>
-        <div style="text-align: center; margin: 20px 0;">
-            <p style="font-style: italic; color: #f1c40f;">Für Hauni, Ihr Kommentar:</p>
-                       
-            <div class="screenshot-container" style="
-            display: inline-block; 
-            margin: 20px auto; 
-            border: 2px solid #34495e; 
-            border-radius: 12px; 
-            overflow: hidden; 
-            line-height: 0;">
-    
-    <img src="https://raw.githubusercontent.com/Qonrath/Gei-Rechner/main/Haunz.jpg" 
-         alt="WhatsApp Reaktion" 
-         style="max-width: 100%; height: auto; display: block;">
-</div>
-            
-            <p style="margin-top: 20px; font-size: 0.8rem; color: #888;">
-                Version 1.0 (Februar 2026)
-            </p>
+      <h2>Widmung</h2>
+      <div style="text-align: center; margin: 20px 0;">
+        <p style="font-style: italic; color: #f1c40f;">Für Hauni, Ihr Kommentar:</p>
+        <div class="screenshot-container" style="display: inline-block; margin: 20px auto; border: 2px solid #34495e; border-radius: 12px; overflow: hidden; line-height: 0;">
+          <img src="https://raw.githubusercontent.com/Qonrath/Gei-Rechner/main/Haunz.jpg" alt="WhatsApp Reaktion" style="max-width: 100%; height: auto; display: block;">
         </div>
-        <button class="btn-gray" onclick="navigation('main-view')" style="width: 100%;">Zurück zur Kasse</button>
+        <p style="margin-top: 20px; font-size: 0.8rem; color: #888;">Version 1.0 (Februar 2026)</p>
+      </div>
+      <button class="btn-gray" onclick="navigation('main-view')" style="width: 100%;">Zurück zur Kasse</button>
     </div>
-</div>
   </div>
+
+<div id="time-view" class="view" style="display:none;">
+  <div class="card">
+    <h2 class="view-title">Zeiterfassung</h2>
+
+    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+      <button id="btn-stempel-start" class="btn-save" onclick="stempelStart()" style="flex: 1; height: 80px;">
+        START<br><span id="display-startzeit" style="font-size: 0.8rem; opacity: 0.8; font-family: monospace;">--:--</span>
+      </button>
+      <button id="btn-stempel-stop" class="btn-danger" onclick="stempelStop()" style="flex: 1; height: 80px; opacity: 0.5;" disabled>
+        STOP
+      </button>
+    </div>
+
+    <button class="btn-gold" onclick="addManuellerEintrag()" style="height: 40px; margin-bottom: 20px;">
+      + Eintrag nachmessen
+    </button>
+
+    <hr style="border: 0; border-top: 1px solid #34495e; margin-bottom: 20px;">
+
+    <div id="zeiterfassung-liste"></div>
+
+    <div class="optionen-grid" style="margin-top: 20px;">
+<button id="btn-sollplan-editor" onclick="openSollzeitenEditor()">
+        📅 Wochen-Soll
+    </button>
+    
+    <button id="btn-monatsbericht" onclick="openMonatsbericht()">
+        📊 Monatsbericht
+    </button>
+    </div>
+
+    <button class="btn-gray" onclick="navigation('main-view')" style="width: 100%; margin-top: 20px;">
+      Zurück zur Kasse
+    </button>
+  </div>
+</div>
+
+</div>
     <script  src="./script.js"></script>
 
   </body>

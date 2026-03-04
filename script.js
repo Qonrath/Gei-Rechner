@@ -1,18 +1,7 @@
 /* ==========================================================================
    1. GLOBALE VARIABLEN
    ========================================================================== */
-let aktuellerBetrag = 0;
-let artikelAnzahl = 0;
-let transaktionsNummer = parseInt(localStorage.getItem('gei_nummer')) || 0;
-let umsatzWare = parseFloat(localStorage.getItem('umsatzWare')) || 0;
-let trinkgeldGesamt = parseFloat(localStorage.getItem('trinkgeldGesamt')) || 0;
-let tagesStatistikProdukte = JSON.parse(localStorage.getItem('gei_strichliste')) || {};
-let berichtErstellt = false;
-let zwischenliste = []; // Hält die aktuellen Produkte fest
 
-/* ==========================================================================
-   ZENTRALE KONFIGURATION (DIE QUELLE DER WAHRHEIT)
-   ========================================================================== */
 const APP_DEFAULTS = {
     fahrer: "CHEF",
     produkte: [{ name: "Produkt 1", preis: 0.50, sichtbar: true },
@@ -27,9 +16,35 @@ const APP_DEFAULTS = {
       }]    
 };
 
-// Initialisierung der Variablen beim Start
+let sollzeiten = JSON.parse(localStorage.getItem('gei_sollzeiten')) || {
+    "Mo": { start: "06:00", ende: "08:00", aktiv: true },
+    "Di": { start: "06:00", ende: "08:00", aktiv: true },
+    "Mi": { start: "06:00", ende: "08:00", aktiv: true },
+    "Do": { start: "06:00", ende: "08:00", aktiv: true },
+    "Fr": { start: "06:00", ende: "08:00", aktiv: true },
+    "Sa": { start: "00:00", ende: "00:00", aktiv: false },
+    "So": { start: "00:00", ende: "00:00", aktiv: false }
+};
+
+
+let aktuellerBetrag = 0;
+let artikelAnzahl = 0;
+let transaktionsNummer = parseInt(localStorage.getItem('gei_nummer')) || 0;
+let umsatzWare = parseFloat(localStorage.getItem('umsatzWare')) || 0;
+let trinkgeldGesamt = parseFloat(localStorage.getItem('trinkgeldGesamt')) || 0;
+let tagesStatistikProdukte = JSON.parse(localStorage.getItem('gei_strichliste')) || {};
+let berichtErstellt = false;
+let zwischenliste = []; // Hält die aktuellen Produkte fest
 let fahrerName = localStorage.getItem('gei_fahrer') || APP_DEFAULTS.fahrer;
 let produkte = JSON.parse(localStorage.getItem('gei_produkte')) || JSON.parse(JSON.stringify(APP_DEFAULTS.produkte));
+
+
+// Werkseinstellungen für Zeiterfassung
+let zeiterfassung = JSON.parse(localStorage.getItem('gei_zeiterfassung')) || [];
+let laufendeStartzeit = localStorage.getItem('gei_laufende_startzeit') || null;
+let berichtMonat = new Date().getMonth() + 1;
+let berichtJahr = new Date().getFullYear();
+
 
 /* ==========================================================================
    2. START-UP LOGIK
@@ -47,6 +62,11 @@ window.onload = function() {
 
     const savedFahrer = localStorage.getItem('gei_fahrer');
     if (savedFahrer) fahrerName = savedFahrer;
+  
+  // Zeiterfassung initialisierung 
+    refreshStempelUI();
+    renderZeiterfassungListe();
+
 
     // 2. UI-Elemente initialisieren (Werte setzen)
     const headerAnzeige = document.getElementById('display-fahrer');
@@ -302,7 +322,7 @@ function navigation(zielId) {
         v.style.display = 'none';
     });
 
-    // 3. Ziel-View anzeigen - Wir nutzen NUR 'block', kein 'flex' Experiment!
+    // 3. Ziel-View anzeigen
     const zielView = document.getElementById(zielId);
     if (zielView) {
         zielView.style.display = 'block';
@@ -320,12 +340,16 @@ function navigation(zielId) {
         icons[1]?.classList.add('active');
         const vorschau = document.getElementById('bericht-live-text');
         if (vorschau) vorschau.innerText = generiereBerichtText();
-    } else if (zielId === 'settings-view') {
+    } else if (zielId === 'time-view') {
         icons[2]?.classList.add('active');
-        // ... (Dein Fahrer-Name Code bleibt hier gleich) ...
-        fillSettingsForm(); 
+        renderZeiterfassungListe();
+        refreshStempelUI();
+     
+    } else if (zielId === 'settings-view') {
+        icons[3]?.classList.add('active');
+        fillSettingsForm(); // Hier wird nun auch der Fahrer-Input initialisiert
     } else if (zielId === 'info-view') {
-        icons[3]?.classList.add('active'); 
+        icons[4]?.classList.add('active'); 
     }
 }
 
@@ -410,6 +434,28 @@ function produkteSpeichernSilently(element) {
 }
 
 function fillSettingsForm() {
+    // NEU: Fahrer-Input Logik integrieren
+    const inputFahrer = document.getElementById('input-fahrer');
+    if (inputFahrer) {
+        inputFahrer.value = fahrerName;
+        inputFahrer.className = "editor-input-name"; // Gleicher Style wie Produkte
+        
+        inputFahrer.onblur = function() {
+            const neuerName = this.value.trim() || "CHEF";
+            fahrerName = neuerName;
+            localStorage.setItem('gei_fahrer', fahrerName);
+            
+            // Header sofort aktualisieren
+            const headerAnzeige = document.getElementById('display-fahrer');
+            if (headerAnzeige) headerAnzeige.innerText = fahrerName.toUpperCase();
+            
+            // Konsistentes visuelles Feedback (grünes Flackern)
+            if (typeof produkteSpeichernSilently === "function") {
+                produkteSpeichernSilently(this);
+            }
+        };
+    }
+
     const container = document.getElementById('preis-editor');
     if (!container) return;
     container.innerHTML = "";
@@ -844,4 +890,491 @@ function showSaveAnimation(element) {
     setTimeout(() => {
         element.classList.remove('save-success');
     }, 600); // Leuchtet für 0,6 Sekunden auf
+}
+
+// Diese Funktion einmalig beim Laden der App aufrufen!
+function setupFahrerLogik() {
+    const inputFahrer = document.getElementById('input-fahrer');
+    if (inputFahrer) {
+        inputFahrer.onblur = function() {
+            fahrerName = this.value.trim() || "CHEF";
+            localStorage.setItem('gei_fahrer', fahrerName);
+            
+            const headerAnzeige = document.getElementById('display-fahrer');
+            if (headerAnzeige) headerAnzeige.innerText = fahrerName.toUpperCase();
+            
+            if (typeof showSaveAnimation === "function") {
+                showSaveAnimation(this);
+            }
+        };
+    }
+}
+
+
+
+/* ==========================================================================
+   7. Zeiterfassung
+   ========================================================================== */
+
+function adjustTime(tag, feld, minuten) {
+    let [stunden, mins] = sollzeiten[tag][feld].split(':').map(Number);
+    let gesamtMinuten = stunden * 60 + mins + minuten;
+    
+    if (gesamtMinuten < 0) gesamtMinuten = 1440 + gesamtMinuten;
+    if (gesamtMinuten >= 1440) gesamtMinuten -= 1440;
+    
+    let neueH = Math.floor(gesamtMinuten / 60).toString().padStart(2, '0');
+    let neueM = (gesamtMinuten % 60).toString().padStart(2, '0');
+    
+    sollzeiten[tag][feld] = `${neueH}:${neueM}`;
+    localStorage.setItem('gei_sollzeiten', JSON.stringify(sollzeiten));
+    openSollzeitenEditor();
+}
+
+function openSollzeitenEditor() {
+    const title = document.getElementById('overlay-titel');
+    const content = document.getElementById('overlay-content');
+    if (!title || !content) return;
+
+    title.innerText = "Wochen-Sollplan";
+    content.innerHTML = "";
+    content.classList.add('overlay-single-col');
+
+    const listContainer = document.createElement('div');
+    listContainer.style.maxHeight = "60vh";
+    listContainer.style.overflowY = "auto";
+
+    Object.keys(sollzeiten).forEach(tag => {
+        const data = sollzeiten[tag];
+        const row = document.createElement('div');
+        row.className = "sollplan-row";
+        row.innerHTML = `
+            <div class="sollplan-tag">${tag.substring(0, 2)}</div>
+            <div class="time-control">
+                <button class="btn-time-control" onclick="adjustTime('${tag}', 'start', -15)">-</button>
+                <div class="time-display">${data.start}</div>
+                <button class="btn-time-control" onclick="adjustTime('${tag}', 'start', 15)">+</button>
+            </div>
+            <div class="time-control">
+                <button class="btn-time-control" onclick="adjustTime('${tag}', 'ende', -15)">-</button>
+                <div class="time-display">${data.ende}</div>
+                <button class="btn-time-control" onclick="adjustTime('${tag}', 'ende', 15)">+</button>
+            </div>`;
+        listContainer.appendChild(row);
+    });
+
+    content.appendChild(listContainer);
+
+    // Der schmale, dezente Abbrechen-Button (halbe Höhe)
+    const btnAbbrechen = document.createElement('button');
+    btnAbbrechen.className = "btn-back";
+    btnAbbrechen.innerHTML = "Abbrechen";
+    btnAbbrechen.style.height = "35px"; 
+    btnAbbrechen.style.marginTop = "15px";
+    btnAbbrechen.onclick = closeOverlay;
+    content.appendChild(btnAbbrechen);
+
+    document.getElementById('overlay').style.display = 'flex';
+}
+
+function stempelStart() {
+    if (laufendeStartzeit) return; 
+    const jetzt = new Date();
+    laufendeStartzeit = jetzt.getHours().toString().padStart(2, '0') + ":" + 
+                        jetzt.getMinutes().toString().padStart(2, '0');
+    localStorage.setItem('gei_laufende_startzeit', laufendeStartzeit);
+    refreshStempelUI();
+}
+
+function stempelStop() {
+    if (!laufendeStartzeit) return;
+
+    const jetzt = new Date();
+    const aktuelleEndzeit = jetzt.getHours().toString().padStart(2, '0') + ":" + 
+                            jetzt.getMinutes().toString().padStart(2, '0');
+    const heute = jetzt.toLocaleDateString('de-DE');
+
+    // Hier greift deine 1/4 Stunden Logik:
+    const finalStart = roundToQuarter(laufendeStartzeit, 'down');
+    const finalEnd = roundToQuarter(aktuelleEndzeit, 'up');
+
+    zeiterfassung.unshift({
+        id: Date.now(),
+        datum: heute,
+        start: finalStart,
+        ende: finalEnd,
+        notiz: ""
+    });
+
+    localStorage.setItem('gei_zeiterfassung', JSON.stringify(zeiterfassung));
+    laufendeStartzeit = null;
+    localStorage.removeItem('gei_laufende_startzeit');
+    
+    refreshStempelUI();
+    renderZeiterfassungListe();
+}
+
+function refreshStempelUI() {
+    const btnStart = document.getElementById('btn-stempel-start');
+    const btnStop = document.getElementById('btn-stempel-stop');
+    const displayStart = document.getElementById('display-startzeit');
+    if (!btnStart || !btnStop) return;
+
+    if (laufendeStartzeit) {
+        btnStart.style.background = "linear-gradient(#2c3e50, #1a252f)";
+        btnStart.style.boxShadow = "inset 0 5px 15px rgba(0,0,0,0.8)";
+        btnStart.style.transform = "translateY(4px)";
+        btnStart.style.border = "1px solid #f1c40f";
+        displayStart.innerText = "GESTARTET: " + laufendeStartzeit;
+        btnStop.style.opacity = "1";
+        btnStop.disabled = false;
+    } else {
+        btnStart.style.background = "";
+        btnStart.style.boxShadow = "";
+        btnStart.style.transform = "";
+        btnStart.style.border = "";
+        displayStart.innerText = "--:--";
+        btnStop.style.opacity = "0.3";
+        btnStop.disabled = true;
+    }
+}
+
+function adjustEntryTime(index, feld, minuten) {
+    let eintrag = zeiterfassung[index];
+    if (!eintrag) return;
+
+    const toMins = (t) => {
+        let [h, m] = t.split(':').map(Number);
+        return h * 60 + m;
+    };
+
+    let startMins = toMins(eintrag.start);
+    let endeMins = toMins(eintrag.ende);
+    let aktuellerWertMins = (feld === 'start') ? startMins : endeMins;
+    
+    let neuerWertMins = aktuellerWertMins + minuten;
+
+    // --- NEUE GRENZLOGIK ---
+    let illegal = false;
+
+    // 1. Harte Grenzen (Start min 00:00 / Ende max 24:00)
+    if (feld === 'start' && (neuerWertMins < 0 || neuerWertMins >= 1440)) {
+        illegal = true; 
+    }
+    if (feld === 'ende' && (neuerWertMins <= 0 || neuerWertMins > 1440)) {
+        illegal = true; 
+    }
+
+    // 2. Kollisionsprüfung (Start muss immer vor Ende liegen)
+    if (feld === 'start' && neuerWertMins >= endeMins) {
+        illegal = true;
+    }
+    if (feld === 'ende' && neuerWertMins <= startMins) {
+        illegal = true;
+    }
+
+    const rows = document.querySelectorAll('.time-entry-row');
+    const currentRow = rows[index];
+    const displays = currentRow.querySelectorAll('.time-display');
+    const targetIndex = (feld === 'start') ? 1 : 2;
+    const targetElement = displays[targetIndex];
+
+    if (illegal) {
+        targetElement.classList.add('flash-error');
+        setTimeout(() => targetElement.classList.remove('flash-error'), 400);
+        return;
+    }
+
+    // Zeit-String bauen (Spezialfall 24:00)
+    let neuStr;
+    if (neuerWertMins === 1440) {
+        neuStr = "24:00";
+    } else {
+        let h = Math.floor(neuerWertMins / 60).toString().padStart(2, '0');
+        let m = (neuerWertMins % 60).toString().padStart(2, '0');
+        neuStr = `${h}:${m}`;
+    }
+
+    zeiterfassung[index][feld] = neuStr;
+    targetElement.innerText = neuStr;
+    
+    targetElement.classList.add('save-success');
+    setTimeout(() => targetElement.classList.remove('save-success'), 400);
+
+    localStorage.setItem('gei_zeiterfassung', JSON.stringify(zeiterfassung));
+}
+
+// 2. Datum anpassen (analog zur Zeit)
+function adjustEntryDate(index, tage) {
+    let parts = zeiterfassung[index].datum.split('.');
+    // Erstellt ein Datumsobjekt: Jahr, Monat (0-11), Tag
+    let d = new Date(parts[2], parts[1] - 1, parts[0]);
+    d.setDate(d.getDate() + tage);
+    
+    // Neues Datum im deutschen Format generieren
+    const neu = d.toLocaleDateString('de-DE');
+    zeiterfassung[index].datum = neu;
+    
+    // UI Update ohne kompletten Reload der Liste (für die Performance)
+    const row = document.querySelectorAll('.time-entry-row')[index];
+    if (row) {
+        const dParts = neu.split('.');
+        const tagMonatAnzeige = dParts[0] + "." + dParts[1] + ".";
+        row.querySelector('.time-display').innerText = tagMonatAnzeige;
+    }
+    
+    localStorage.setItem('gei_zeiterfassung', JSON.stringify(zeiterfassung));
+}
+
+// 3. Notiz-Feld mit "Flackern" beim Verlassen
+function saveEntryNotiz(index, inputElement) {
+    zeiterfassung[index].notiz = inputElement.value;
+    localStorage.setItem('gei_zeiterfassung', JSON.stringify(zeiterfassung));
+    
+    // 1. Klasse hinzufügen für das "Glow"-Feedback
+    inputElement.classList.add('save-success');
+    
+    // 2. Nach 600ms dezent wieder entfernen
+    setTimeout(() => {
+        inputElement.classList.remove('save-success');
+    }, 600);
+}
+
+function saveAndRefreshTime() {
+    localStorage.setItem('gei_zeiterfassung', JSON.stringify(zeiterfassung));
+    renderZeiterfassungListe();
+}
+
+function renderZeiterfassungListe() {
+    const container = document.getElementById('zeiterfassung-liste');
+    if (!container) return;
+    container.innerHTML = "";
+
+    zeiterfassung.forEach((e, i) => {
+        // Sicherstellen, dass nur Tag und Monat angezeigt werden
+        const dParts = e.datum.split('.');
+        const tagMonatAnzeige = dParts[0] + "." + dParts[1] + ".";
+
+        const row = document.createElement('div');
+        row.className = "time-entry-row";
+        row.innerHTML = `
+            <div class="time-control">
+                <button class="btn-time-control" onclick="adjustEntryDate(${i}, -1)">-</button>
+                <div class="time-display" style="min-width: 50px;">${tagMonatAnzeige}</div>
+                <button class="btn-time-control" onclick="adjustEntryDate(${i}, 1)">+</button>
+            </div>
+            
+            <input type="text" class="editor-input-name" style="height: 32px !important;" 
+                   value="${e.notiz || ''}" placeholder="Notiz..." 
+                   onblur="saveEntryNotiz(${i}, this)">
+            
+            <div class="time-control">
+                <button class="btn-time-control" onclick="adjustEntryTime(${i}, 'start', -15)">-</button>
+                <div class="time-display">${e.start}</div>
+                <button class="btn-time-control" onclick="adjustEntryTime(${i}, 'start', 15)">+</button>
+            </div>
+
+            <div class="time-control">
+                <button class="btn-time-control" onclick="adjustEntryTime(${i}, 'ende', -15)">-</button>
+                <div class="time-display">${e.ende}</div>
+                <button class="btn-time-control" onclick="adjustEntryTime(${i}, 'ende', 15)">+</button>
+            </div>
+
+            <button class="btn-delete-item" onclick="if(confirm('Löschen?')){ zeiterfassung.splice(${i}, 1); renderZeiterfassungListe(); localStorage.setItem('gei_zeiterfassung', JSON.stringify(zeiterfassung)); }">🗑️</button>
+        `;
+        container.appendChild(row);
+    });
+}
+
+function addManuellerEintrag() {
+    if (!Array.isArray(zeiterfassung)) zeiterfassung = [];
+
+    zeiterfassung.unshift({
+        id: Date.now(),
+        datum: new Date().toLocaleDateString('de-DE'),
+        start: "08:00",
+        ende: "16:00",
+        notiz: ""
+    });
+    
+    saveAndRefreshTime(); // Zeichnet alles neu, damit der neue Eintrag oben erscheint
+}
+
+function roundToQuarter(timeStr, direction) {
+    let [h, m] = timeStr.split(':').map(Number);
+    let totalMinutes = h * 60 + m;
+
+    if (direction === 'down') {
+        // Abrunden auf das vorherige Viertel
+        totalMinutes = Math.floor(totalMinutes / 15) * 15;
+    } else {
+        // Aufrunden auf das nächste Viertel
+        totalMinutes = Math.ceil(totalMinutes / 15) * 15;
+    }
+
+    let roundedH = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
+    let roundedM = (totalMinutes % 60).toString().padStart(2, '0');
+    return `${roundedH}:${roundedM}`;
+}
+
+function openMonatsbericht() {
+    const overlayBox = document.getElementById('overlay-box');
+    const title = document.getElementById('overlay-titel');
+    const content = document.getElementById('overlay-content');
+    
+    if (!overlayBox || !content) return;
+
+    overlayBox.classList.add('overlay-fullscreen');
+    content.classList.add('overlay-single-col');
+    title.innerText = "Monatsbericht Zeiterfassung";
+    
+    // Die Steuerung und die 3 Buttons (Kopieren, Speichern, Zurück)
+    content.innerHTML = `
+        <div class="monats-steuerung" style="display:flex; justify-content:center; align-items:center; gap:15px; margin-bottom:15px;">
+            <button class="btn-time-control" onclick="adjustBerichtMonat(-1)">-</button>
+            <div id="monat-jahr-display" style="font-weight:bold; font-size:1.2rem; min-width:120px; text-align:center;">
+                ${berichtMonat.toString().padStart(2,'0')}.${berichtJahr}
+            </div>
+            <button class="btn-time-control" onclick="adjustBerichtMonat(1)">+</button>
+        </div>
+
+        <div id="bericht-vorschau-container" style="flex-grow: 1; height: auto; overflow-y: auto; background:#000; border: 1px solid #2ecc71;">
+            <div id="monats-bericht-text" class="matrix-text">Lade Daten...</div>
+        </div>
+        
+        <div class="optionen-grid" style="grid-template-columns: 1fr 1fr; margin-top: 15px; gap: 10px;">
+            <button class="btn-save" onclick="copyMonatsbericht()">📋 Kopieren</button>
+            <button class="btn-save" style="background: linear-gradient(#3498db, #2980b9);" onclick="downloadBericht()">💾 Speichern</button>
+            <button class="btn-back" onclick="closeMonatsbericht()" style="grid-column: span 2; height: 35px; margin-top:5px;">⬅️ Zurück</button>
+        </div>
+    `;
+
+    document.getElementById('overlay').style.display = 'flex';
+    renderMonatsBerichtLogik();
+}
+
+function adjustBerichtMonat(delta) {
+    berichtMonat += delta;
+    if (berichtMonat > 12) { berichtMonat = 1; berichtJahr++; }
+    if (berichtMonat < 1) { berichtMonat = 12; berichtJahr--; }
+    
+    document.getElementById('monat-jahr-display').innerText = 
+        `${berichtMonat.toString().padStart(2,'0')}.${berichtJahr}`;
+    renderMonatsBerichtLogik();
+}
+
+function closeMonatsbericht() {
+    const overlayBox = document.getElementById('overlay-box');
+    overlayBox.classList.remove('overlay-fullscreen');
+    closeOverlay(); // Ruft die Standard-Schließfunktion auf
+}
+
+function renderMonatsBerichtLogik() {
+    const jetzt = new Date();
+    const gesuchterMonat = berichtMonat;
+    const gesuchtesJahr = berichtJahr;
+    
+    const tageNamen = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+
+    let gesamtMinutenSoll = 0;
+    let gesamtMinutenIst = 0;
+
+    // 1. SOLL-Stunden berechnen
+    const tageImMonat = new Date(gesuchtesJahr, gesuchterMonat, 0).getDate();
+    for (let d = 1; d <= tageImMonat; d++) {
+        const datumObj = new Date(gesuchtesJahr, gesuchterMonat - 1, d);
+        const wochentagName = tageNamen[datumObj.getDay()];
+        const soll = sollzeiten[wochentagName];
+        if (soll && soll.start !== soll.ende) {
+            const [sH, sM] = soll.start.split(':').map(Number);
+            const [eH, eM] = soll.ende.split(':').map(Number);
+            gesamtMinutenSoll += (eH * 60 + eM) - (sH * 60 + sM);
+        }
+    }
+
+    // 2. IST-Stunden filtern
+    const monatsDaten = zeiterfassung.filter(e => {
+        const parts = e.datum.split('.'); 
+        return parseInt(parts[1]) === gesuchterMonat && parseInt(parts[2]) === gesuchtesJahr;
+    });
+
+    // --- SORTIERUNG (Chronologisch nach Tag und Uhrzeit) ---
+    monatsDaten.sort((a, b) => {
+        const dateA = a.datum.split('.').reverse().join('');
+        const dateB = b.datum.split('.').reverse().join('');
+        if (dateA !== dateB) return dateA.localeCompare(dateB);
+        return a.start.localeCompare(b.start); // Falls mehrere Einträge am selben Tag
+    });
+
+    // 3. Bericht-Text aufbauen (mit Tabellenspalten)
+    let berichtText = `=== MONATSBERICHT ZEITERFASSUNG ===\n`;
+    berichtText += `Zeitraum: ${gesuchterMonat.toString().padStart(2,'0')}/${gesuchtesJahr}\n`;
+    berichtText += `-----------------------------------------------------------\n`;
+    // Spaltenköpfe mit festen Breiten: Datum (12), Von (8), Bis (8), Dauer (8), Notiz
+    berichtText += `DATUM        VON      BIS      DAUER    ANMERKUNG\n`;
+    berichtText += `-----------------------------------------------------------\n`;
+
+    monatsDaten.forEach(e => {
+        const [sH, sM] = e.start.split(':').map(Number);
+        const [eH, eM] = e.ende.split(':').map(Number);
+        const diff = (eH * 60 + eM) - (sH * 60 + sM);
+        gesamtMinutenIst += diff;
+        
+        const h = Math.floor(diff / 60);
+        const m = diff % 60;
+        const dauerStr = `${h}:${m.toString().padStart(2, '0')}h`;
+
+        // Formatierung der Zeile mit padEnd für exakte Spaltenbreiten
+        const colDatum = e.datum.padEnd(12);
+        const colVon   = e.start.padEnd(8);
+        const colBis   = e.ende.padEnd(8);
+        const colDauer = dauerStr.padEnd(8);
+        const colNote  = e.notiz || "";
+
+        berichtText += `${colDatum} ${colVon} ${colBis} ${colDauer} ${colNote}\n`;
+    });
+
+    // 4. Zusammenfassung mit bündiger Ausrichtung
+    const formatTimeOnly = (totalMins) => {
+        const h = Math.floor(Math.abs(totalMins) / 60);
+        const m = Math.abs(totalMins) % 60;
+        return `${h}:${m.toString().padStart(2, '0')}`;
+    };
+
+    const diffMins = gesamtMinutenIst - gesamtMinutenSoll;
+    const diffVorzeichen = diffMins >= 0 ? "+" : "-";
+
+    berichtText += `-----------------------------------------------------------\n`;
+    // IST und SOLL bekommen ein Leerzeichen an der Stelle, wo unten das Vorzeichen steht
+    berichtText += `GESAMT IST:        ${formatTimeOnly(gesamtMinutenIst).padStart(8)} h\n`;
+    berichtText += `GESAMT SOLL:       ${formatTimeOnly(gesamtMinutenSoll).padStart(8)} h\n`;
+    
+    // DIFFERENZ: Vorzeichen direkt vor die Zahl, bündig mit den Werten darüber
+    berichtText += `DIFFERENZ:        ${diffVorzeichen} ${formatTimeOnly(diffMins).padStart(7)} h\n`;
+    berichtText += `-----------------------------------------------------------\n`;
+    
+    const display = document.getElementById('monats-bericht-text');
+    if (display) display.innerText = berichtText;
+}
+
+
+function copyMonatsbericht() {
+    const text = document.getElementById('monats-bericht-text').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+        alert("Bericht in Zwischenablage kopiert!");
+    });
+}
+
+function downloadBericht() {
+    const text = document.getElementById('monats-bericht-text').innerText;
+    const dateiName = `Gei_Bericht_${berichtJahr}_${berichtMonat.toString().padStart(2,'0')}.txt`;
+    
+    const element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', dateiName);
+
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
 }

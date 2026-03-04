@@ -6,6 +6,8 @@
 :root {
     --app-max-width: 660px;
     --main-bg: #1a1f24;
+    --grid-cols-default: 4; /* Für Kasse/Hauptmaske */
+    --grid-cols-overlay: 2; /* Deine gewünschten 2 Spalten im Overlay */
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -117,10 +119,29 @@ button {
 button:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,0.3); }
 
 /* GRIDS */
-.schnell-tasten, .action-area { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; }
-.optionen-grid, .settings-controls, .backup-grid, #overlay-content {
+.schnell-tasten, .action-area { 
+    display: grid; 
+    grid-template-columns: repeat(var(--grid-cols-default), 1fr); 
+    gap: 8px; 
+    margin-bottom: 15px; 
+}
+.optionen-grid, .settings-controls, .backup-grid {
   display: grid !important; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;
 }
+
+/* Das Overlay-Grid (Flexibler machen) */
+#overlay-content {
+    display: grid !important; 
+    grid-template-columns: repeat(var(--grid-cols-overlay), 1fr); 
+    gap: 10px; 
+    margin-top: 10px;
+}
+
+/* Spezial-Klasse, falls wir im Overlay doch mal nur 1 Spalte brauchen */
+.overlay-single-col {
+    grid-template-columns: 1fr !important;
+}
+
 
 /* Spezifische Button-Inhalte (Name über Preis) */
 .btn-price-tag { font-size: 0.7rem; opacity: 0.8; margin-top: 2px; }
@@ -142,9 +163,31 @@ button:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,0.3);
     background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.editor-input-name { flex-grow: 1; background: #000; color: white; border: 1px solid #34495e; padding: 8px; border-radius: 5px; }
+
+/*.editor-input-name { flex-grow: 1; background: #000; color: white; border: 1px solid #34495e; padding: 8px; border-radius: 5px; }
+*/
+
+
+.editor-input-name {
+    flex-grow: 1;
+    background: #000;
+    color: white;
+    border: 1px solid #34495e;
+    padding: 8px;
+    border-radius: 5px;
+    height: 38px !important; /* Einheitlich mit den Zeit-Buttons */
+    font-size: 0.9rem;
+}
+
 .editor-input-price { width: 70px; background: #000; color: white; border: 1px solid #34495e; padding: 8px; border-radius: 5px; text-align: right; }
+
 .btn-delete-item { width: 35px; height: 35px; background: rgba(214, 48, 49, 0.2); border: 1px solid #d63031; color: #ff7675; border-radius: 5px; }
+
+.btn-delete-item:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
 
 /* ==========================================================================
    7. FARBSCHEMA & ANIMATIONEN
@@ -153,35 +196,72 @@ button:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,0.3);
 #btn-passend, .btn-save { background: linear-gradient(#2ecc71, #27ae60); box-shadow: 0 5px 0 #1e8449; }
 #btn-auf50, #btn-aufEuro { background: linear-gradient(#9b59b6, #8e44ad); box-shadow: 0 5px 0 #6c3483; }
 #btn-clear, .btn-danger { background: linear-gradient(#ff7675, #d63031); box-shadow: 0 5px 0 #8e2021; }
-.btn-gold { background: linear-gradient(#f1c40f, #d4ac0d); color: #2c3e50; box-shadow: 0 5px 0 #9e810a; }
+
+.btn-gold, #btn-monatsbericht, #btn-sollplan-editor { 
+    background: linear-gradient(#f1c40f, #d4ac0d); 
+    color: #2c3e50; 
+    box-shadow: 0 5px 0 #9e810a; 
+}
+
 .btn-gray, .btn-back { background: linear-gradient(#34495e, #2c3e50); box-shadow: 0 5px 0 #1a252f; }
 
-.save-success { outline: 2px solid #2ecc71 !important; background-color: rgba(46, 204, 113, 0.2) !important; transition: all 0.3s ease; }
-input.save-success { box-shadow: 0 0 15px rgba(46, 204, 113, 0.5); }
+
+/* Dein vorhandener Standard aus Sektion 7 */
+.save-success { 
+    outline: 2px solid #2ecc71 !important; 
+    background-color: rgba(46, 204, 113, 0.2) !important; 
+    transition: all 0.5s ease; /* Macht das Verschwinden dezent */
+}
+
+input.save-success { 
+    box-shadow: 0 0 15px rgba(46, 204, 113, 0.5); 
+}
+
+
+/* Definition der fadeIn Animation */
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(5px); /* Optionaler kleiner Effekt: schiebt die View leicht hoch */
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+.flash-error {
+    outline: 2px solid #ff7675 !important;
+    background-color: rgba(214, 48, 49, 0.3) !important;
+    transition: all 0.3s ease;
+}
 
 
 /* ==========================================================================
    BERICHT-VORSCHAU (MATRIX / RETRO-LOOK)
    ========================================================================= */
 
+
 #bericht-vorschau-container {
-    background: #000;              /* Pechschwarz */
-    border: 2px solid #34495e;     /* Dunkler Rahmen */
+    background: #000;
+    border: 1px solid #2ecc71;
     border-radius: 12px;
     padding: 15px;
-    height: 350px;                 /* Feste Höhe für Scrollbarkeit */
-    overflow-y: auto;
-    box-shadow: inset 0 0 20px rgba(46, 204, 113, 0.2); /* Sanfter grüner Glow innen */
+    margin-top: 10px;
+    
+    /* Scroll-Logik */
+    overflow-y: auto; 
+    max-height: 70vh; /* Begrenzt die Höhe auf 70% des Bildschirms */
+    
+    /* Flex-Verhalten */
+    flex-grow: 1;
+    display: block; /* Ändern auf block für besseres Scroll-Handling */
+    
+    /* Terminal-Look */
+    box-shadow: inset 0 0 20px rgba(46, 204, 113, 0.2);
+    position: relative;
 }
 
-#bericht-live-text {
-    color: #2ecc71;                /* Klassisches Matrix-Grün */
-    font-family: 'Courier New', Courier, monospace; /* Schreibmaschinen-Schrift */
-    font-size: 0.85rem;
-    white-space: pre;              /* Ganz wichtig: Erhält Leerzeichen & Umbrüche */
-    line-height: 1.4;
-    text-shadow: 0 0 5px rgba(46, 204, 113, 0.5); /* Leucht-Effekt der Zeichen */
-}
 
 /* Custom Scrollbar für den Retro-Look */
 #bericht-vorschau-container::-webkit-scrollbar {
@@ -198,4 +278,207 @@ input.save-success { box-shadow: 0 0 15px rgba(46, 204, 113, 0.5); }
 .screenshot-container img {
     filter: grayscale(20%) contrast(1.1); /* Optional: Sieht etwas edler aus */
     border-radius: 4px;
+}
+
+/*   Zeiterfassung    */
+
+.sollzeit-card {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 8px;
+    border-radius: 10px;
+    border: 1px solid #34495e;
+    display: flex;
+    flex-direction: column; /* Tag oben, Zeiten darunter */
+    gap: 5px;
+    align-items: center;
+}
+
+.sollzeit-card input[type="time"] {
+    width: 100%;
+    background: #000;
+    color: #fff;
+    border: 1px solid #34495e;
+    border-radius: 5px;
+    padding: 3px;
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+/* Spezifisches Grid für den Wochen-Sollplan im Overlay */
+.sollplan-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 1fr; /* Tag, Start-Control, Ende-Control */
+    gap: 12px;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    margin-bottom: 6px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border-left: 3px solid #3498db; /* Blau für Sollzeiten zur Unterscheidung von Gold (Ist) */
+}
+
+.sollplan-tag {
+    font-weight: bold;
+    color: #888;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+}
+
+/* --- 1. BASIS-ELEMENTE (Das edle Grau-Design) --- */
+
+.time-control {
+    display: flex;
+    align-items: center;
+    background: #000; 
+    border: 1px solid #34495e;
+    border-radius: 6px;
+    overflow: hidden;
+    height: 32px; /* Standard: Kompakt für die Liste */
+}
+
+.btn-time-control {
+    height: 100% !important;
+    width: 30px !important;
+    background: #2c3e50 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: #f1c40f !important;
+    font-size: 0.9rem !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none !important;
+}
+
+.btn-time-control:active {
+    background: #1a252f !important;
+    box-shadow: inset 0 3px 5px rgba(0,0,0,0.6) !important;
+    transform: translateY(1px);
+}
+
+.time-display {
+    flex-grow: 1;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: #fff;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* --- 2. DIE ZEITERFASSUNGS-LISTE (ROLLCONTAINER) --- */
+
+#zeiterfassung-liste {
+    max-height: 450px;
+    overflow-y: auto;
+    scroll-behavior: smooth; /* Sanftes Gleiten beim Auto-Scroll */
+    border: 1px solid #34495e;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.5), rgba(0,0,0,0.2));
+    position: relative;
+}
+
+.time-entry-row {
+    display: grid;
+    /* Datum, Notiz, Start, Ende, Müll */
+    grid-template-columns: 120px 1.5fr 95px 95px 40px;
+    gap: 6px;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    margin-bottom: 4px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border-left: 3px solid #f1c40f;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* --- 3. AUSNAHME: DAS SOLLZEITEN-OVERLAY (GRÖSSER) --- */
+
+.time-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 1fr;
+    gap: 12px;
+    align-items: center;
+    padding: 8px;
+    margin-bottom: 8px;
+}
+
+/* Hier machen wir die Controls im Overlay wieder etwas größer/griffiger */
+.time-row .time-control {
+    height: 40px;
+}
+
+.time-row .btn-time-control {
+    width: 45px !important;
+    font-size: 1.2rem !important;
+}
+
+.time-row .time-display {
+    font-size: 1rem;
+}
+
+/* Monatsbericht: Volle Höhe, aber App-Breite einhalten */
+.overlay-fullscreen {
+    width: 95% !important;
+    max-width: var(--app-max-width) !important; /* Hier greifen die 660px wieder */
+    height: 95vh !important;
+    display: flex;
+    flex-direction: column;
+    padding: 15px !important;
+    transition: all 0.3s ease;
+}
+
+
+
+/* --- 4. SPEZIAL-STATUS --- */
+
+.btn-gray.active-stempel {
+    background: #1a252f !important;
+    box-shadow: inset 0 5px 10px rgba(0,0,0,0.5) !important;
+    border: 1px solid #f1c40f !important;
+}
+
+.flash-save {
+    background-color: #27ae60 !important;
+    transition: background-color 0.3s ease;
+}
+
+
+/* ==========================================================================
+   DER MASTER-GLOW (Überschreibt alles andere)
+   ========================================================================== */
+
+#bericht-live-text, 
+#monats-bericht-text, 
+.matrix-text {
+    color: #2ecc71 !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 0.85rem !important;
+    white-space: pre !important;
+    line-height: 1.4 !important;
+    background: transparent !important;
+    letter-spacing: 0.5px !important;
+
+    /* Der "CRT-Elektronenstrahl" Effekt: 3 Ebenen für maximale Leuchtkraft */
+    text-shadow: 
+        0 0 2px rgba(255, 255, 255, 0.5),   /* Weißer Kern für Schärfe */
+        0 0 8px rgba(46, 204, 113, 0.9),    /* Grüner Haupt-Glow */
+        0 0 15px rgba(46, 204, 113, 0.4)    /* Weiches Ausbluten ins Schwarz */
+        !important;
+}
+
+/* Verhindert, dass Browser-Standardfarben bei Auswahl alles kaputt machen */
+#bericht-live-text::selection, 
+#monats-bericht-text::selection {
+    background: rgba(46, 204, 113, 0.3);
+    color: #fff;
+}
+
+/* Sicherstellen, dass die Container pechschwarz sind, sonst leuchtet nix */
+#bericht-vorschau-container, 
+#ticker-container {
+    background-color: #000 !important;
+    border: 1px solid #2ecc71 !important;
+    box-shadow: inset 0 0 20px rgba(46, 204, 113, 0.2) !important;
 }
