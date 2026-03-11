@@ -1,0 +1,17 @@
+{
+  "name": "Gei Artikel-Rechner und Tagesbericht",
+  "short_name": "Gei",
+  "description": "Gei Artikel-Rechner und Tagesbericht für Tablet",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#12171b",
+  "theme_color": "#2ecc71",
+  "icons": [
+    {
+      "src": "Gei_icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
